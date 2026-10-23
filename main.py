@@ -869,1449 +869,1252 @@ async def start(message: Message):
         parse_mode="HTML"
     )
 
-    @dp.callback_query(F.data == "open_offers")
-    async def open_offers(callback: CallbackQuery):
+@dp.callback_query(F.data == "open_offers")
+async def open_offers(callback: CallbackQuery):
 
-        users = get_all_users()
-        user_count = len(users)
+    users = get_all_users()
+    user_count = len(users)
 
-        buttons = [
-            [
-                InlineKeyboardButton(
-                    text="💳 Дебетовые карты",
-                    callback_data="category:debit"
-                )
-            ],
-            [
-                InlineKeyboardButton(
-                    text="💳 Кредитные карты",
-                    callback_data="category:credit"
-                )
-            ],
-            [
-                InlineKeyboardButton(
-                    text="🏢 Для бизнеса",
-                    callback_data="category:business"
-                )
-            ],
-            [
-                InlineKeyboardButton(
-                    text="📈 Инвестиции",
-                    callback_data="category:invest"
-                )
-            ],
-            [
-                InlineKeyboardButton(
-                    text="₽ МФО",
-                    callback_data="category:mfo"
-                )
-            ]
+    buttons = [
+        [
+            InlineKeyboardButton(
+                text="💳 Дебетовые карты",
+                callback_data="category:debit"
+            )
+        ],
+        [
+            InlineKeyboardButton(
+                text="💳 Кредитные карты",
+                callback_data="category:credit"
+            )
+        ],
+        [
+            InlineKeyboardButton(
+                text="🏢 Для бизнеса",
+                callback_data="category:business"
+            )
+        ],
+        [
+            InlineKeyboardButton(
+                text="📈 Инвестиции",
+                callback_data="category:invest"
+            )
+        ],
+        [
+            InlineKeyboardButton(
+                text="₽ МФО",
+                callback_data="category:mfo"
+            )
         ]
+    ]
 
-        if user_count >= 100:
-            buttons.append([
-                InlineKeyboardButton(
-                    text="🔥 100 пользователей",
-                    callback_data="milestone_100"
-                )
-            ])
-
+    if user_count >= 100:
         buttons.append([
             InlineKeyboardButton(
-                text="← На главную",
-                callback_data="home"
+                text="🔥 100 пользователей",
+                callback_data="milestone_100"
             )
         ])
 
-        keyboard = InlineKeyboardMarkup(
-            inline_keyboard=buttons
+    buttons.append([
+        InlineKeyboardButton(
+            text="← На главную",
+            callback_data="home"
         )
+    ])
 
-        await callback.message.edit_text(
-            "🟢 <b>ПРЕДЛОЖЕНИЯ</b>\n"
-            "<i>Выберите финансовый продукт</i>\n\n"
+    keyboard = InlineKeyboardMarkup(
+        inline_keyboard=buttons
+    )
 
-            "В каждом разделе собраны доступные "
-            "предложения и условия их оформления.\n\n"
+    await callback.message.edit_text(
+        "🟢 <b>ПРЕДЛОЖЕНИЯ</b>\n"
+        "<i>Выберите финансовый продукт</i>\n\n"
 
-            "<blockquote>"
-            "Вознаграждение и необходимые условия "
-            "указаны до перехода к оформлению."
-            "</blockquote>",
+        "В каждом разделе собраны доступные "
+        "предложения и условия их оформления.\n\n"
 
-            reply_markup=keyboard,
-            parse_mode="HTML"
+        "<blockquote>"
+        "Вознаграждение и необходимые условия "
+        "указаны до перехода к оформлению."
+        "</blockquote>",
+
+        reply_markup=keyboard,
+        parse_mode="HTML"
+    )
+
+    await callback.answer()
+
+@dp.callback_query(F.data == "milestone_100")
+async def milestone_100(callback: CallbackQuery):
+
+    users = get_all_users()
+
+    if len(users) < 100:
+        await callback.answer(
+            "Пока ещё не 100 пользователей",
+            show_alert=True
         )
+        return
 
-        await callback.answer()
-
-        @dp.callback_query(F.data == "milestone_100")
-        async def milestone_100(callback: CallbackQuery):
-
-            users = get_all_users()
-
-            if len(users) < 100:
-                await callback.answer(
-                    "Пока ещё не 100 пользователей",
-                    show_alert=True
-                )
-                return
-
-            keyboard = InlineKeyboardMarkup(
-                inline_keyboard=[
-                    [
-                        InlineKeyboardButton(
-                            text="🚀 К предложениям",
-                            callback_data="open_offers"
-                        )
-                    ],
-                    [
-                        InlineKeyboardButton(
-                            text="← На главную",
-                            callback_data="home"
-                        )
-                    ]
-                ]
-            )
-
-            await callback.message.edit_text(
-                "🔥 <b>BANKFLOW — 100 ПОЛЬЗОВАТЕЛЕЙ</b>\n"
-                "━━━━━━━━━━━━━━━━━━\n\n"
-
-                "<b>100 человек уже воспользовались BankFlow.</b>\n\n"
-
-                "Ещё недавно это был просто проект, "
-                "а сейчас ботом уже пользуются реальные люди.\n\n"
-
-                "Спасибо каждому, кто тестирует предложения, "
-                "находит ошибки и пишет свои замечания.\n\n"
-
-                "<b>Что дальше?</b>\n\n"
-
-                "Добавляем новые предложения, "
-                "улучшаем личный кабинет и "
-                "делаем работу с заявками удобнее.\n\n"
-
-                "<blockquote>"
-                "100 пользователей — первая большая отметка BankFlow."
-                "</blockquote>",
-
-                reply_markup=keyboard,
-                parse_mode="HTML"
-            )
-
-            await callback.answer()
-
-        @dp.callback_query(F.data == "home")
-        async def home(callback: CallbackQuery):
-
-            user_id = callback.from_user.id
-
-            user = get_user_profile(user_id)
-
-            if not user:
-                await callback.answer(
-                    "Профиль не найден",
-                    show_alert=True
-                )
-                return
-
-            balance = user[3] or 0
-            points = user[4] or 0
-            level = user[5] or "START"
-            total_earned = user[6] or 0
-
-            levels = {
-                "START": (0, 500, "PRO"),
-                "PRO": (500, 1500, "ELITE"),
-                "ELITE": (1500, 3000, "MASTER"),
-                "MASTER": (3000, 6000, "LEGEND"),
-                "LEGEND": (6000, 6000, None)
-            }
-
-            current_points, target_points, next_level = levels.get(
-                level,
-                levels["START"]
-            )
-
-            if next_level:
-
-                progress = max(
-                    0,
-                    min(
-                        100,
-                        int(
-                            (points - current_points)
-                            / (target_points - current_points)
-                            * 100
-                        )
-                    )
-                )
-
-                filled = int(progress / 10)
-
-                progress_bar = (
-                        "█" * filled +
-                        "░" * (10 - filled)
-                )
-
-                remaining = max(
-                    0,
-                    target_points - points
-                )
-
-                progress_text = (
-                    f"🏆 <b>{level}</b> → <b>{next_level}</b>\n"
-                    f"{progress_bar} <b>{progress}%</b>\n"
-                    f"Осталось: <b>{remaining:,} ⭐</b>"
-                )
-
-            else:
-
-                progress_text = (
-                    "🏆 <b>LEGEND</b>\n"
-                    "🔥 Максимальный уровень"
-                )
-
-            keyboard = InlineKeyboardMarkup(
-                inline_keyboard=[
-                    [
-                        InlineKeyboardButton(
-                            text="Открыть предложения",
-                            callback_data="open_offers",
-                            style="success"
-                        )
-                    ],
-                    [
-                        InlineKeyboardButton(
-                            text="🎯 Задания",
-                            callback_data="tasks"
-                        ),
-                        InlineKeyboardButton(
-                            text="👤 Кабинет",
-                            callback_data="cabinet"
-                        )
-                    ],
-                    [
-                        InlineKeyboardButton(
-                            text="Как это работает",
-                            callback_data="how"
-                        ),
-                        InlineKeyboardButton(
-                            text="Поддержка",
-                            url=SUPPORT_URL
-                        )
-                    ]
-                ]
-            )
-
-            await callback.message.edit_text(
-                "🟢 <b>BankFlow</b>\n"
-                "<i>Банковские предложения с вознаграждением</i>\n\n"
-
-                f"Привет, <b>{callback.from_user.first_name}</b>.\n\n"
-
-                "💰 <b>ТВОИ ФИНАНСЫ</b>\n"
-                f"Баланс: <b>{balance:,} ₽</b>\n"
-                f"Заработано: <b>{total_earned:,} ₽</b>\n\n"
-
-                "🏆 <b>ТВОЙ ПРОГРЕСС</b>\n"
-                f"⭐ {points:,} баллов\n"
-                f"{progress_text}\n\n"
-
-                "<blockquote>"
-                "Выполняй предложения, получай "
-                "вознаграждения и прокачивай свой уровень."
-                "</blockquote>",
-
-                reply_markup=keyboard,
-                parse_mode="HTML"
-            )
-
-            await callback.answer()
-
-    @dp.callback_query(F.data == "cabinet")
-    async def cabinet(callback: CallbackQuery):
-
-        user_id = callback.from_user.id
-
-        user = get_user_profile(user_id)
-
-        if not user:
-            await callback.answer(
-                "Профиль не найден",
-                show_alert=True
-            )
-            return
-
-        balance = user[3] or 0
-        points = user[4] or 0
-        level = user[5] or "START"
-        total_earned = user[6] or 0
-
-        applications = get_user_applications(user_id)
-        referrals = get_referral_count(user_id)
-
-        levels = {
-            "START": (0, 500, "PRO"),
-            "PRO": (500, 1500, "ELITE"),
-            "ELITE": (1500, 3000, "MASTER"),
-            "MASTER": (3000, 6000, "LEGEND"),
-            "LEGEND": (6000, 6000, None)
-        }
-
-        current_points, target_points, next_level = levels.get(
-            level,
-            levels["START"]
-        )
-
-        if next_level:
-
-            progress = max(
-                0,
-                min(
-                    100,
-                    int(
-                        (points - current_points)
-                        / (target_points - current_points)
-                        * 100
-                    )
-                )
-            )
-
-            filled = int(progress / 10)
-
-            progress_bar = (
-                    "█" * filled +
-                    "░" * (10 - filled)
-            )
-
-            remaining = max(
-                0,
-                target_points - points
-            )
-
-            progress_text = (
-                "🏆 <b>ПРОГРЕСС</b>\n"
-                f"Уровень: <b>{level}</b>\n"
-                f"⭐ {points:,} / {target_points:,}\n\n"
-                f"{progress_bar} <b>{progress}%</b>\n"
-                f"До <b>{next_level}</b>: "
-                f"<b>{remaining:,} ⭐</b>"
-            )
-
-        else:
-
-            progress_text = (
-                "🏆 <b>ПРОГРЕСС</b>\n"
-                f"Уровень: <b>{level}</b>\n"
-                f"⭐ <b>{points:,}</b>\n\n"
-                "🔥 <b>МАКСИМАЛЬНЫЙ УРОВЕНЬ</b>"
-            )
-
-        keyboard = InlineKeyboardMarkup(
-            inline_keyboard=[
-                [
-                    InlineKeyboardButton(
-                        text="📋 Мои заявки",
-                        callback_data="my_applications"
-                    ),
-                    InlineKeyboardButton(
-                        text="💸 История выплат",
-                        callback_data="withdrawal_history"
-                    )
-                ],
-
-                [
-                    InlineKeyboardButton(
-                        text="👥 Партнёрская программа",
-                        callback_data="referral_program"
-                    )
-                ],
-                [
-                    InlineKeyboardButton(
-                        text="🏅 Достижения",
-                        callback_data="achievements"
-                    )
-                ],
-                [
-                    InlineKeyboardButton(
-                        text="🎯 Задания",
-                        callback_data="tasks"
-                    )
-                ],
-                [
-                    InlineKeyboardButton(
-                        text="💳 Мои продукты",
-                        callback_data="my_products"
-                    )
-                ],
-                [
-                    InlineKeyboardButton(
-                        text="💰 Вывести средства",
-                        callback_data="withdraw"
-                    )
-                ],
-                [
-                    InlineKeyboardButton(
-                        text="← На главную",
-                        callback_data="home"
-                    )
-                ]
-            ]
-        )
-
-        text = (
-            "👤 <b>ЛИЧНЫЙ КАБИНЕТ</b>\n"
-            "━━━━━━━━━━━━━━━━━━\n\n"
-
-            f"🆔 ID: <code>{user_id}</code>\n\n"
-
-            "💰 <b>ФИНАНСЫ</b>\n"
-            f"💳 Баланс: <b>{balance:,} ₽</b>\n"
-            f"📈 Заработано: <b>{total_earned:,} ₽</b>\n\n"
-
-            f"{progress_text}\n\n"
-
-            "📊 <b>СТАТИСТИКА</b>\n"
-            f"📋 Заявок: <b>{len(applications)}</b>\n"
-            f"👥 Рефералов: <b>{referrals}</b>\n\n"
-
-            "<blockquote>"
-            "Выполняй предложения, получай вознаграждения "
-            "и прокачивай свой уровень."
-            "</blockquote>"
-        )
-
-        await callback.message.edit_text(
-            text,
-            reply_markup=keyboard,
-            parse_mode="HTML"
-        )
-
-        await callback.answer()
-
-    @dp.callback_query(F.data == "home")
-    async def home(callback: CallbackQuery):
-        user_id = callback.from_user.id
-
-        user = get_user_profile(user_id)
-
-        if not user:
-            await callback.answer(
-                "Профиль не найден",
-                show_alert=True
-            )
-            return
-
-        balance = user[3] or 0
-        points = user[4] or 0
-        level = user[5] or "START"
-        total_earned = user[6] or 0
-
-        levels = {
-            "START": (0, 500, "PRO"),
-            "PRO": (500, 1500, "ELITE"),
-            "ELITE": (1500, 3000, "MASTER"),
-            "MASTER": (3000, 6000, "LEGEND"),
-            "LEGEND": (6000, 6000, None)
-        }
-
-        current_points, target_points, next_level = levels.get(
-            level,
-            levels["START"]
-        )
-
-        if next_level:
-            progress = max(
-                0,
-                min(
-                    100,
-                    int(
-                        (points - current_points)
-                        / (target_points - current_points)
-                        * 100
-                    )
-                )
-            )
-
-            filled = int(progress / 10)
-
-            progress_bar = (
-                    "█" * filled +
-                    "░" * (10 - filled)
-            )
-
-            remaining = max(
-                0,
-                target_points - points
-            )
-
-            progress_text = (
-                f"🏆 <b>{level}</b> → <b>{next_level}</b>\n"
-                f"{progress_bar} <b>{progress}%</b>\n"
-                f"Осталось: <b>{remaining:,} ⭐</b>"
-            )
-
-        else:
-            progress_text = (
-                "🏆 <b>LEGEND</b>\n"
-                "🔥 Максимальный уровень"
-            )
-
-        keyboard = InlineKeyboardMarkup(
-            inline_keyboard=[
-                [
-                    InlineKeyboardButton(
-                        text="Открыть предложения",
-                        callback_data="open_offers",
-                        style="success"
-                    )
-                ],
-                [
-                    InlineKeyboardButton(
-                        text="🎯 Задания",
-                        callback_data="tasks"
-                    ),
-                    InlineKeyboardButton(
-                        text="👤 Кабинет",
-                        callback_data="cabinet"
-                    )
-                ],
-                [
-                    InlineKeyboardButton(
-                        text="Как это работает",
-                        callback_data="how"
-                    ),
-                    InlineKeyboardButton(
-                        text="Поддержка",
-                        url=SUPPORT_URL
-                    )
-                ]
-            ]
-        )
-
-        await callback.message.edit_text(
-            "🟢 <b>BankFlow</b>\n"
-            "<i>Банковские предложения с вознаграждением</i>\n\n"
-
-            f"Привет, <b>{callback.from_user.first_name}</b>.\n\n"
-
-            "💰 <b>ТВОИ ФИНАНСЫ</b>\n"
-            f"Баланс: <b>{balance:,} ₽</b>\n"
-            f"Заработано: <b>{total_earned:,} ₽</b>\n\n"
-
-            "🏆 <b>ТВОЙ ПРОГРЕСС</b>\n"
-            f"⭐ {points:,} баллов\n"
-            f"{progress_text}\n\n"
-
-            "<blockquote>"
-            "Выполняй предложения, получай "
-            "вознаграждения и прокачивай свой уровень."
-            "</blockquote>",
-
-            reply_markup=keyboard,
-            parse_mode="HTML"
-        )
-
-        await callback.answer()
-
-    @dp.callback_query(F.data == "my_products")
-    async def my_products(callback: CallbackQuery):
-
-        user_id = callback.from_user.id
-
-        products = get_user_products(user_id)
-
-        if products:
-            text = (
-                "💳 <b>МОИ ПРОДУКТЫ</b>\n"
-                "━━━━━━━━━━━━━━━━━━\n\n"
-                "BankFlow не будет рекомендовать "
-                "тебе продукты, которые уже есть у тебя.\n\n"
-            )
-
-            for product in products:
-                text += f"✅ {product}\n"
-
-            text += (
-                "\n━━━━━━━━━━━━━━━━━━\n"
-                "Добавляй только те продукты, "
-                "которыми ты уже пользуешься."
-            )
-
-        else:
-            text = (
-                "💳 <b>МОИ ПРОДУКТЫ</b>\n"
-                "━━━━━━━━━━━━━━━━━━\n\n"
-                "Ты пока не добавил ни одного продукта.\n\n"
-                "<blockquote>"
-                "Укажи продукты, которые уже есть у тебя, "
-                "и BankFlow сможет точнее подбирать "
-                "новые предложения."
-                "</blockquote>"
-            )
-
-        keyboard = InlineKeyboardMarkup(
-            inline_keyboard=[
-                [
-                    InlineKeyboardButton(
-                        text="➕ Добавить продукт",
-                        callback_data="add_product"
-                    )
-                ],
-                [
-                    InlineKeyboardButton(
-                        text="← В личный кабинет",
-                        callback_data="cabinet"
-                    )
-                ]
-            ]
-        )
-
-        await callback.message.edit_text(
-            text,
-            reply_markup=keyboard,
-            parse_mode="HTML"
-        )
-
-        await callback.answer()
-
-    @dp.callback_query(F.data == "referral_program")
-    async def referral_program(callback: CallbackQuery):
-
-        user_id = callback.from_user.id
-
-        referral_count = get_referral_count(user_id)
-        active_referral_count = get_active_referral_count(user_id)
-
-        academy_unlocked = (
-                referral_count >= 5
-                and active_referral_count >= 3
-        )
-
-        bot_info = await bot.get_me()
-
-        referral_link = (
-            f"https://t.me/{bot_info.username}"
-            f"?start=ref_{user_id}"
-        )
-
-        # Статус Академии
-        if academy_unlocked:
-            academy_status = (
-                "🔓 <b>АКАДЕМИЯ ОТКРЫТА</b>\n\n"
-                "Ты выполнил условия партнёрской программы.\n"
-                "Теперь тебе доступна закрытая программа "
-                "обучения BankFlow.\n\n"
-            )
-        else:
-            academy_status = (
-                "🔒 <b>АКАДЕМИЯ ЗАКРЫТА</b>\n\n"
-                "Для доступа необходимо:\n"
-                "• пригласить 5 пользователей\n"
-                "• получить 3 подтверждённых действия\n\n"
-            )
-
-        # Кнопки
-        keyboard_buttons = [
+    keyboard = InlineKeyboardMarkup(
+        inline_keyboard=[
             [
                 InlineKeyboardButton(
-                    text="📤 Пригласить друга",
-                    url=(
-                        "https://t.me/share/url?"
-                        f"url={referral_link}"
-                    )
+                    text="🚀 К предложениям",
+                    callback_data="open_offers"
+                )
+            ],
+            [
+                InlineKeyboardButton(
+                    text="← На главную",
+                    callback_data="home"
                 )
             ]
         ]
+    )
 
-        if academy_unlocked:
-            keyboard_buttons.append(
-                [
-                    InlineKeyboardButton(
-                        text="🎓 Открыть Академию",
-                        callback_data="academy"
-                    )
-                ]
+    await callback.message.edit_text(
+        "🔥 <b>BANKFLOW — 100 ПОЛЬЗОВАТЕЛЕЙ</b>\n"
+        "━━━━━━━━━━━━━━━━━━\n\n"
+
+        "<b>100 человек уже воспользовались BankFlow.</b>\n\n"
+
+        "Ещё недавно это был просто проект, "
+        "а сейчас ботом уже пользуются реальные люди.\n\n"
+
+        "Спасибо каждому, кто тестирует предложения, "
+        "находит ошибки и пишет свои замечания.\n\n"
+
+        "<b>Что дальше?</b>\n\n"
+
+        "Добавляем новые предложения, "
+        "улучшаем личный кабинет и "
+        "делаем работу с заявками удобнее.\n\n"
+
+        "<blockquote>"
+        "100 пользователей — первая большая отметка BankFlow."
+        "</blockquote>",
+
+        reply_markup=keyboard,
+        parse_mode="HTML"
+    )
+
+    await callback.answer()
+
+@dp.callback_query(F.data == "cabinet")
+async def cabinet(callback: CallbackQuery):
+
+    user_id = callback.from_user.id
+
+    user = get_user_profile(user_id)
+
+    if not user:
+        await callback.answer(
+            "Профиль не найден",
+            show_alert=True
+        )
+        return
+
+    balance = user[3] or 0
+    points = user[4] or 0
+    level = user[5] or "START"
+    total_earned = user[6] or 0
+
+    applications = get_user_applications(user_id)
+    referrals = get_referral_count(user_id)
+
+    levels = {
+        "START": (0, 500, "PRO"),
+        "PRO": (500, 1500, "ELITE"),
+        "ELITE": (1500, 3000, "MASTER"),
+        "MASTER": (3000, 6000, "LEGEND"),
+        "LEGEND": (6000, 6000, None)
+    }
+
+    current_points, target_points, next_level = levels.get(
+        level,
+        levels["START"]
+    )
+
+    if next_level:
+
+        progress = max(
+            0,
+            min(
+                100,
+                int(
+                    (points - current_points)
+                    / (target_points - current_points)
+                    * 100
+                )
             )
+        )
 
-        keyboard_buttons.append(
+        filled = int(progress / 10)
+
+        progress_bar = (
+                "█" * filled +
+                "░" * (10 - filled)
+        )
+
+        remaining = max(
+            0,
+            target_points - points
+        )
+
+        progress_text = (
+            "🏆 <b>ПРОГРЕСС</b>\n"
+            f"Уровень: <b>{level}</b>\n"
+            f"⭐ {points:,} / {target_points:,}\n\n"
+            f"{progress_bar} <b>{progress}%</b>\n"
+            f"До <b>{next_level}</b>: "
+            f"<b>{remaining:,} ⭐</b>"
+        )
+
+    else:
+
+        progress_text = (
+            "🏆 <b>ПРОГРЕСС</b>\n"
+            f"Уровень: <b>{level}</b>\n"
+            f"⭐ <b>{points:,}</b>\n\n"
+            "🔥 <b>МАКСИМАЛЬНЫЙ УРОВЕНЬ</b>"
+        )
+
+    keyboard = InlineKeyboardMarkup(
+        inline_keyboard=[
+            [
+                InlineKeyboardButton(
+                    text="📋 Мои заявки",
+                    callback_data="my_applications"
+                ),
+                InlineKeyboardButton(
+                    text="💸 История выплат",
+                    callback_data="withdrawal_history"
+                )
+            ],
+
+            [
+                InlineKeyboardButton(
+                    text="👥 Партнёрская программа",
+                    callback_data="referral_program"
+                )
+            ],
+            [
+                InlineKeyboardButton(
+                    text="🏅 Достижения",
+                    callback_data="achievements"
+                )
+            ],
+            [
+                InlineKeyboardButton(
+                    text="🎯 Задания",
+                    callback_data="tasks"
+                )
+            ],
+            [
+                InlineKeyboardButton(
+                    text="💳 Мои продукты",
+                    callback_data="my_products"
+                )
+            ],
+            [
+                InlineKeyboardButton(
+                    text="💰 Вывести средства",
+                    callback_data="withdraw"
+                )
+            ],
+            [
+                InlineKeyboardButton(
+                    text="← На главную",
+                    callback_data="home"
+                )
+            ]
+        ]
+    )
+
+    text = (
+        "👤 <b>ЛИЧНЫЙ КАБИНЕТ</b>\n"
+        "━━━━━━━━━━━━━━━━━━\n\n"
+
+        f"🆔 ID: <code>{user_id}</code>\n\n"
+
+        "💰 <b>ФИНАНСЫ</b>\n"
+        f"💳 Баланс: <b>{balance:,} ₽</b>\n"
+        f"📈 Заработано: <b>{total_earned:,} ₽</b>\n\n"
+
+        f"{progress_text}\n\n"
+
+        "📊 <b>СТАТИСТИКА</b>\n"
+        f"📋 Заявок: <b>{len(applications)}</b>\n"
+        f"👥 Рефералов: <b>{referrals}</b>\n\n"
+
+        "<blockquote>"
+        "Выполняй предложения, получай вознаграждения "
+        "и прокачивай свой уровень."
+        "</blockquote>"
+    )
+
+    await callback.message.edit_text(
+        text,
+        reply_markup=keyboard,
+        parse_mode="HTML"
+    )
+
+    await callback.answer()
+
+@dp.callback_query(F.data == "home")
+async def home(callback: CallbackQuery):
+    user_id = callback.from_user.id
+
+    user = get_user_profile(user_id)
+
+    if not user:
+        await callback.answer(
+            "Профиль не найден",
+            show_alert=True
+        )
+        return
+
+    balance = user[3] or 0
+    points = user[4] or 0
+    level = user[5] or "START"
+    total_earned = user[6] or 0
+
+    levels = {
+        "START": (0, 500, "PRO"),
+        "PRO": (500, 1500, "ELITE"),
+        "ELITE": (1500, 3000, "MASTER"),
+        "MASTER": (3000, 6000, "LEGEND"),
+        "LEGEND": (6000, 6000, None)
+    }
+
+    current_points, target_points, next_level = levels.get(
+        level,
+        levels["START"]
+    )
+
+    if next_level:
+        progress = max(
+            0,
+            min(
+                100,
+                int(
+                    (points - current_points)
+                    / (target_points - current_points)
+                    * 100
+                )
+            )
+        )
+
+        filled = int(progress / 10)
+
+        progress_bar = (
+                "█" * filled +
+                "░" * (10 - filled)
+        )
+
+        remaining = max(
+            0,
+            target_points - points
+        )
+
+        progress_text = (
+            f"🏆 <b>{level}</b> → <b>{next_level}</b>\n"
+            f"{progress_bar} <b>{progress}%</b>\n"
+            f"Осталось: <b>{remaining:,} ⭐</b>"
+        )
+
+    else:
+        progress_text = (
+            "🏆 <b>LEGEND</b>\n"
+            "🔥 Максимальный уровень"
+        )
+
+    keyboard = InlineKeyboardMarkup(
+        inline_keyboard=[
+            [
+                InlineKeyboardButton(
+                    text="Открыть предложения",
+                    callback_data="open_offers",
+                    style="success"
+                )
+            ],
+            [
+                InlineKeyboardButton(
+                    text="🎯 Задания",
+                    callback_data="tasks"
+                ),
+                InlineKeyboardButton(
+                    text="👤 Кабинет",
+                    callback_data="cabinet"
+                )
+            ],
+            [
+                InlineKeyboardButton(
+                    text="Как это работает",
+                    callback_data="how"
+                ),
+                InlineKeyboardButton(
+                    text="Поддержка",
+                    url=SUPPORT_URL
+                )
+            ]
+        ]
+    )
+
+    await callback.message.edit_text(
+        "🟢 <b>BankFlow</b>\n"
+        "<i>Банковские предложения с вознаграждением</i>\n\n"
+
+        f"Привет, <b>{callback.from_user.first_name}</b>.\n\n"
+
+        "💰 <b>ТВОИ ФИНАНСЫ</b>\n"
+        f"Баланс: <b>{balance:,} ₽</b>\n"
+        f"Заработано: <b>{total_earned:,} ₽</b>\n\n"
+
+        "🏆 <b>ТВОЙ ПРОГРЕСС</b>\n"
+        f"⭐ {points:,} баллов\n"
+        f"{progress_text}\n\n"
+
+        "<blockquote>"
+        "Выполняй предложения, получай "
+        "вознаграждения и прокачивай свой уровень."
+        "</blockquote>",
+
+        reply_markup=keyboard,
+        parse_mode="HTML"
+    )
+
+    await callback.answer()
+
+@dp.callback_query(F.data == "my_products")
+async def my_products(callback: CallbackQuery):
+
+    user_id = callback.from_user.id
+
+    products = get_user_products(user_id)
+
+    if products:
+        text = (
+            "💳 <b>МОИ ПРОДУКТЫ</b>\n"
+            "━━━━━━━━━━━━━━━━━━\n\n"
+            "BankFlow не будет рекомендовать "
+            "тебе продукты, которые уже есть у тебя.\n\n"
+        )
+
+        for product in products:
+            text += f"✅ {product}\n"
+
+        text += (
+            "\n━━━━━━━━━━━━━━━━━━\n"
+            "Добавляй только те продукты, "
+            "которыми ты уже пользуешься."
+        )
+
+    else:
+        text = (
+            "💳 <b>МОИ ПРОДУКТЫ</b>\n"
+            "━━━━━━━━━━━━━━━━━━\n\n"
+            "Ты пока не добавил ни одного продукта.\n\n"
+            "<blockquote>"
+            "Укажи продукты, которые уже есть у тебя, "
+            "и BankFlow сможет точнее подбирать "
+            "новые предложения."
+            "</blockquote>"
+        )
+
+    keyboard = InlineKeyboardMarkup(
+        inline_keyboard=[
+            [
+                InlineKeyboardButton(
+                    text="➕ Добавить продукт",
+                    callback_data="add_product"
+                )
+            ],
             [
                 InlineKeyboardButton(
                     text="← В личный кабинет",
                     callback_data="cabinet"
                 )
             ]
+        ]
+    )
+
+    await callback.message.edit_text(
+        text,
+        reply_markup=keyboard,
+        parse_mode="HTML"
+    )
+
+    await callback.answer()
+
+@dp.callback_query(F.data == "referral_program")
+async def referral_program(callback: CallbackQuery):
+
+    user_id = callback.from_user.id
+
+    referral_count = get_referral_count(user_id)
+    active_referral_count = get_active_referral_count(user_id)
+
+    academy_unlocked = (
+            referral_count >= 5
+            and active_referral_count >= 3
+    )
+
+    bot_info = await bot.get_me()
+
+    referral_link = (
+        f"https://t.me/{bot_info.username}"
+        f"?start=ref_{user_id}"
+    )
+
+    # Статус Академии
+    if academy_unlocked:
+        academy_status = (
+            "🔓 <b>АКАДЕМИЯ ОТКРЫТА</b>\n\n"
+            "Ты выполнил условия партнёрской программы.\n"
+            "Теперь тебе доступна закрытая программа "
+            "обучения BankFlow.\n\n"
+        )
+    else:
+        academy_status = (
+            "🔒 <b>АКАДЕМИЯ ЗАКРЫТА</b>\n\n"
+            "Для доступа необходимо:\n"
+            "• пригласить 5 пользователей\n"
+            "• получить 3 подтверждённых действия\n\n"
         )
 
-        keyboard = InlineKeyboardMarkup(
-            inline_keyboard=keyboard_buttons
-        )
-
-        # Сообщение
-        await callback.message.edit_text(
-            "👥 <b>ПАРТНЁРСКАЯ ПРОГРАММА</b>\n\n"
-
-            "Приглашайте пользователей в BankFlow "
-            "и получайте вознаграждение за их "
-            "подтверждённые действия.\n\n"
-
-            f"<b>Приглашено:</b> {referral_count}\n\n"
-
-            "🎓 <b>BANKFLOW ACADEMY</b>\n\n"
-
-            f"👤 Приглашено: <b>{referral_count} / 5</b>\n"
-            f"✅ Выполнили условия: "
-            f"<b>{active_referral_count} / 3</b>\n\n"
-
-            f"{academy_status}"
-
-            "<b>Ваша персональная ссылка</b>\n"
-            f"<code>{referral_link}</code>\n\n"
-
-            "<blockquote>"
-            "Вознаграждение начисляется только "
-            "после подтверждения выполнения условий "
-            "приглашённым пользователем."
-            "</blockquote>",
-
-            reply_markup=keyboard,
-            parse_mode="HTML"
-        )
-
-        await callback.answer()
-
-    @dp.callback_query(F.data == "achievements")
-    async def achievements(callback: CallbackQuery):
-
-        user_id = callback.from_user.id
-
-        user = get_user_profile(user_id)
-
-        if not user:
-            await callback.answer(
-                "Профиль не найден",
-                show_alert=True
+    # Кнопки
+    keyboard_buttons = [
+        [
+            InlineKeyboardButton(
+                text="📤 Пригласить друга",
+                url=(
+                    "https://t.me/share/url?"
+                    f"url={referral_link}"
+                )
             )
-            return
+        ]
+    ]
 
-        points = user[4] or 0
-        total_earned = user[6] or 0
-        referrals = get_referral_count(user_id)
+    if academy_unlocked:
+        keyboard_buttons.append(
+            [
+                InlineKeyboardButton(
+                    text="🎓 Открыть Академию",
+                    callback_data="academy"
+                )
+            ]
+        )
 
-        earned = get_user_achievements(user_id)
+    keyboard_buttons.append(
+        [
+            InlineKeyboardButton(
+                text="← В личный кабинет",
+                callback_data="cabinet"
+            )
+        ]
+    )
 
-        earned_codes = {
-            achievement[0]
-            for achievement in earned
+    keyboard = InlineKeyboardMarkup(
+        inline_keyboard=keyboard_buttons
+    )
+
+    # Сообщение
+    await callback.message.edit_text(
+        "👥 <b>ПАРТНЁРСКАЯ ПРОГРАММА</b>\n\n"
+
+        "Приглашайте пользователей в BankFlow "
+        "и получайте вознаграждение за их "
+        "подтверждённые действия.\n\n"
+
+        f"<b>Приглашено:</b> {referral_count}\n\n"
+
+        "🎓 <b>BANKFLOW ACADEMY</b>\n\n"
+
+        f"👤 Приглашено: <b>{referral_count} / 5</b>\n"
+        f"✅ Выполнили условия: "
+        f"<b>{active_referral_count} / 3</b>\n\n"
+
+        f"{academy_status}"
+
+        "<b>Ваша персональная ссылка</b>\n"
+        f"<code>{referral_link}</code>\n\n"
+
+        "<blockquote>"
+        "Вознаграждение начисляется только "
+        "после подтверждения выполнения условий "
+        "приглашённым пользователем."
+        "</blockquote>",
+
+        reply_markup=keyboard,
+        parse_mode="HTML"
+    )
+
+    await callback.answer()
+
+@dp.callback_query(F.data == "achievements")
+async def achievements(callback: CallbackQuery):
+
+    user_id = callback.from_user.id
+
+    user = get_user_profile(user_id)
+
+    if not user:
+        await callback.answer(
+            "Профиль не найден",
+            show_alert=True
+        )
+        return
+
+    points = user[4] or 0
+    total_earned = user[6] or 0
+    referrals = get_referral_count(user_id)
+
+    earned = get_user_achievements(user_id)
+
+    earned_codes = {
+        achievement[0]
+        for achievement in earned
+    }
+
+    achievements_list = [
+        (
+            "first_earning",
+            "🥇 ПЕРВЫЙ ЗАРАБОТОК",
+            "Получи первое вознаграждение",
+            100
+        ),
+        (
+            "500_points",
+            "⭐ 500 БАЛЛОВ",
+            "Набери 500 ⭐",
+            150
+        ),
+        (
+            "10k_earned",
+            "💰 ПЕРВЫЕ 10 000 ₽",
+            "Заработай 10 000 ₽",
+            300
+        ),
+        (
+            "5_referrals",
+            "👥 5 РЕФЕРАЛОВ",
+            "Пригласи 5 пользователей",
+            250
+        )
+    ]
+
+    text = (
+        "🏅 <b>МОИ ДОСТИЖЕНИЯ</b>\n"
+        "━━━━━━━━━━━━━━━━━━\n\n"
+        "Развивайся в BankFlow, выполняй "
+        "условия и получай дополнительные ⭐\n\n"
+    )
+
+    for code, title, description, reward in achievements_list:
+
+        if code in earned_codes:
+            status = "✅ <b>ПОЛУЧЕНО</b>"
+        else:
+            status = "🔒 <b>НЕ ПОЛУЧЕНО</b>"
+
+        text += (
+            f"{title}\n"
+            f"<i>{description}</i>\n"
+            f"🎁 Награда: <b>+{reward} ⭐</b>\n"
+            f"{status}\n\n"
+        )
+
+    text += (
+        "━━━━━━━━━━━━━━━━━━\n"
+        "📊 <b>ТВОЯ СТАТИСТИКА</b>\n\n"
+        f"⭐ Баллы: <b>{points:,}</b>\n"
+        f"💰 Заработано: <b>{total_earned:,} ₽</b>\n"
+        f"👥 Рефералов: <b>{referrals}</b>"
+    )
+
+    keyboard = InlineKeyboardMarkup(
+        inline_keyboard=[
+            [
+                InlineKeyboardButton(
+                    text="← В личный кабинет",
+                    callback_data="cabinet"
+                )
+            ]
+        ]
+    )
+
+    await callback.message.edit_text(
+        text,
+        reply_markup=keyboard,
+        parse_mode="HTML"
+    )
+
+    await callback.answer()
+
+@dp.callback_query(F.data == "tasks")
+async def tasks(callback: CallbackQuery):
+
+    user_id = callback.from_user.id
+
+    user = get_user_profile(user_id)
+
+    if not user:
+        await callback.answer(
+            "Профиль не найден",
+            show_alert=True
+        )
+        return
+
+    points = user[4] or 0
+    total_earned = user[6] or 0
+    referrals = get_referral_count(user_id)
+
+    tasks_list = [
+        (
+            "first_earning",
+            "💰 ПОЛУЧИТЬ ПЕРВОЕ ВОЗНАГРАЖДЕНИЕ",
+            "Подтверди первое предложение",
+            total_earned >= 1,
+            100
+        ),
+        (
+            "500_points",
+            "⭐ НАБРАТЬ 500 БАЛЛОВ",
+            "Дойди до 500 ⭐",
+            points >= 500,
+            150
+        ),
+        (
+            "10k_earned",
+            "💵 ЗАРАБОТАТЬ 10 000 ₽",
+            "Заработай 10 000 ₽",
+            total_earned >= 10000,
+            300
+        ),
+        (
+            "5_referrals",
+            "👥 ПРИГЛАСИТЬ 5 РЕФЕРАЛОВ",
+            "Пригласи 5 пользователей",
+            referrals >= 5,
+            250
+        )
+    ]
+
+    text = (
+        "🎯 <b>ЗАДАНИЯ</b>\n"
+        "━━━━━━━━━━━━━━━━━━\n\n"
+        "Выполняй задания и получай "
+        "дополнительные ⭐\n\n"
+    )
+
+    for code, title, description, completed, reward in tasks_list:
+
+        if completed:
+            status = "✅ <b>ВЫПОЛНЕНО</b>"
+        else:
+            status = "🔒 <b>В ПРОЦЕССЕ</b>"
+
+        text += (
+            f"{title}\n"
+            f"<i>{description}</i>\n"
+            f"🎁 Награда: <b>+{reward} ⭐</b>\n"
+            f"{status}\n\n"
+        )
+
+    text += (
+        "━━━━━━━━━━━━━━━━━━\n"
+        "💡 Выполняй предложения, "
+        "приглашай пользователей и "
+        "прокачивай свой уровень."
+    )
+
+    keyboard = InlineKeyboardMarkup(
+        inline_keyboard=[
+            [
+                InlineKeyboardButton(
+                    text="🏅 Достижения",
+                    callback_data="achievements"
+                )
+            ],
+            [
+                InlineKeyboardButton(
+                    text="← В личный кабинет",
+                    callback_data="cabinet"
+                )
+            ]
+        ]
+    )
+
+    await callback.message.edit_text(
+        text,
+        reply_markup=keyboard,
+        parse_mode="HTML"
+    )
+
+    await callback.answer()
+
+@dp.callback_query(F.data == "academy")
+async def academy(callback: CallbackQuery):
+
+    user_id = callback.from_user.id
+
+    referral_count = get_referral_count(user_id)
+    active_referral_count = get_active_referral_count(user_id)
+
+    if referral_count < 5 or active_referral_count < 3:
+        await callback.answer(
+            "Академия пока закрыта",
+            show_alert=True
+        )
+        return
+
+    keyboard = InlineKeyboardMarkup(
+        inline_keyboard=[
+            [
+                InlineKeyboardButton(
+                    text="01 — Как работает BankFlow",
+                    callback_data="academy_1"
+                )
+            ],
+            [
+                InlineKeyboardButton(
+                    text="02 — Как выбирать продукты",
+                    callback_data="academy_2"
+                )
+            ],
+            [
+                InlineKeyboardButton(
+                    text="03 — Как не терять выплаты",
+                    callback_data="academy_3"
+                )
+            ],
+            [
+                InlineKeyboardButton(
+                    text="04 — Как увеличивать доход",
+                    callback_data="academy_4"
+                )
+            ],
+            [
+                InlineKeyboardButton(
+                    text="← Партнёрская программа",
+                    callback_data="referral_program"
+                )
+            ]
+        ]
+    )
+
+    await callback.message.edit_text(
+        "🎓 <b>BANKFLOW ACADEMY</b>\n"
+        "<i>Закрытая академия партнёров</i>\n\n"
+
+        "Добро пожаловать.\n\n"
+
+        "Здесь ты узнаешь, как системно "
+        "работать с банковскими продуктами, "
+        "правильно проходить условия и "
+        "использовать BankFlow эффективнее.\n\n"
+
+        "<b>Твоя программа обучения</b>\n\n"
+
+        "01 — Как работает BankFlow\n"
+        "02 — Как выбирать продукты\n"
+        "03 — Как не терять выплаты\n"
+        "04 — Как увеличивать доход\n\n"
+
+        "<blockquote>"
+        "Проходи модули последовательно. "
+        "Каждый следующий шаг поможет тебе "
+        "эффективнее использовать платформу."
+        "</blockquote>",
+
+        reply_markup=keyboard,
+        parse_mode="HTML"
+    )
+
+    await callback.answer()
+
+@dp.callback_query(F.data == "academy_1")
+async def academy_1(callback: CallbackQuery):
+
+    keyboard = InlineKeyboardMarkup(
+        inline_keyboard=[
+            [
+                InlineKeyboardButton(
+                    text="← К Академии",
+                    callback_data="academy"
+                )
+            ]
+        ]
+    )
+
+    await callback.message.edit_text(
+        "🎓 <b>МОДУЛЬ 01</b>\n"
+        "<b>КАК РАБОТАЕТ BANKFLOW</b>\n\n"
+
+        "<b>1. Выбираешь продукт</b>\n"
+        "В BankFlow собраны банковские продукты "
+        "с указанием вознаграждения и условий.\n\n"
+
+        "<b>2. Изучаешь условия</b>\n"
+        "Перед оформлением обязательно смотри, "
+        "что именно требуется для получения "
+        "вознаграждения.\n\n"
+
+        "<b>3. Оформляешь продукт</b>\n"
+        "Переходишь по своей ссылке и оформляешь "
+        "продукт по условиям конкретного оффера.\n\n"
+
+        "<b>4. Выполняешь условия</b>\n"
+        "Например: совершить покупку на определённую "
+        "сумму или выполнить другое действие, "
+        "указанное в оффере.\n\n"
+
+        "<b>5. Отправляешь заявку</b>\n"
+        "После выполнения условий заявка попадает "
+        "на проверку.\n\n"
+
+        "<b>6. Получаешь вознаграждение</b>\n"
+        "После подтверждения вознаграждение "
+        "начисляется на баланс BankFlow.\n\n"
+
+        "━━━━━━━━━━━━━━\n\n"
+
+        "💡 <b>Главное правило</b>\n\n"
+        "Не ориентируйся только на размер выплаты.\n"
+        "Сначала смотри условия, требования и "
+        "срок выполнения — и только потом "
+        "оформляй продукт.\n\n"
+
+        "<blockquote>"
+        "BankFlow зарабатывает тогда, когда "
+        "подтверждается реальное действие. "
+        "Поэтому здесь важна не просто регистрация, "
+        "а правильное выполнение условий."
+        "</blockquote>",
+
+        reply_markup=keyboard,
+        parse_mode="HTML"
+    )
+
+    await callback.answer()
+
+@dp.callback_query(F.data == "academy_2")
+async def academy_2(callback: CallbackQuery):
+
+    keyboard = InlineKeyboardMarkup(
+        inline_keyboard=[
+            [
+                InlineKeyboardButton(
+                    text="← К Академии",
+                    callback_data="academy"
+                )
+            ]
+        ]
+    )
+
+    await callback.message.edit_text(
+        "🎓 <b>МОДУЛЬ 02</b>\n"
+        "<b>КАК ВЫБИРАТЬ ПРОДУКТЫ</b>\n\n"
+
+        "<b>Не всегда самый большой оффер — лучший.</b>\n\n"
+
+        "Перед оформлением смотри на 5 вещей:\n\n"
+
+        "<b>1. Возраст</b>\n"
+        "Проверь, подходит ли тебе возрастной "
+        "диапазон конкретного продукта.\n\n"
+
+        "<b>2. Регион</b>\n"
+        "Некоторые предложения доступны не во всех "
+        "регионах. Проверяй условия перед оформлением.\n\n"
+
+        "<b>3. Требования</b>\n"
+        "Посмотри, нужны ли ФИО, телефон, email "
+        "или другие данные для оформления.\n\n"
+
+        "<b>4. Условие выплаты</b>\n"
+        "Главное — понять, какое действие нужно "
+        "выполнить для получения вознаграждения.\n\n"
+
+        "<b>5. Сложность</b>\n"
+        "Сравнивай не только выплату, но и количество "
+        "действий, которые необходимо выполнить.\n\n"
+
+        "━━━━━━━━━━━━━━\n\n"
+
+        "💡 <b>Простой принцип</b>\n\n"
+
+        "Если один продукт даёт 2 000 ₽ за одно "
+        "простое действие, а другой — 2 500 ₽, "
+        "но требует несколько дополнительных шагов, "
+        "первый может оказаться выгоднее по времени "
+        "и усилиям.\n\n"
+
+        "<blockquote>"
+        "Смотри на оффер целиком: "
+        "выплата + условия + требования + "
+        "сложность + срок."
+        "</blockquote>",
+
+        reply_markup=keyboard,
+        parse_mode="HTML"
+    )
+
+    await callback.answer()
+
+@dp.callback_query(F.data == "academy_3")
+async def academy_3(callback: CallbackQuery):
+
+    keyboard = InlineKeyboardMarkup(
+        inline_keyboard=[
+            [
+                InlineKeyboardButton(
+                    text="← К Академии",
+                    callback_data="academy"
+                )
+            ]
+        ]
+    )
+
+    await callback.message.edit_text(
+        "🎓 <b>МОДУЛЬ 03</b>\n"
+        "<b>КАК НЕ ТЕРЯТЬ ВЫПЛАТЫ</b>\n\n"
+
+        "Большинство проблем возникает не потому, "
+        "что продукт плохой, а потому что пользователь "
+        "не выполнил одно из условий.\n\n"
+
+        "<b>Перед оформлением:</b>\n\n"
+
+        "☑️ Проверь возраст\n"
+        "☑️ Проверь регион\n"
+        "☑️ Прочитай условия оффера\n"
+        "☑️ Посмотри, какое действие требуется\n"
+        "☑️ Проверь срок выполнения условий\n\n"
+
+        "<b>После оформления:</b>\n\n"
+
+        "☑️ Выполни действие именно так, "
+        "как указано в условиях\n"
+        "☑️ Не пропускай обязательные шаги\n"
+        "☑️ Сохрани подтверждение выполнения, "
+        "если оно может понадобиться\n"
+        "☑️ Следи за статусом заявки в BankFlow\n\n"
+
+        "━━━━━━━━━━━━━━\n\n"
+
+        "⚠️ <b>Главная ошибка</b>\n\n"
+
+        "Не оформляй продукт только потому, "
+        "что видишь большую сумму выплаты.\n\n"
+
+        "Сначала условия → потом действие → "
+        "потом заявка на подтверждение.\n\n"
+
+        "<blockquote>"
+        "Если не уверен, что выполнил условия, "
+        "лучше сначала разобраться, а уже потом "
+        "отправлять заявку на проверку."
+        "</blockquote>",
+
+        reply_markup=keyboard,
+        parse_mode="HTML"
+    )
+
+    await callback.answer()
+
+@dp.callback_query(F.data == "academy_4")
+async def academy_4(callback: CallbackQuery):
+
+    keyboard = InlineKeyboardMarkup(
+        inline_keyboard=[
+            [
+                InlineKeyboardButton(
+                    text="👥 Партнёрская программа",
+                    callback_data="referral_program"
+                )
+            ],
+            [
+                InlineKeyboardButton(
+                    text="← К Академии",
+                    callback_data="academy"
+                )
+            ]
+        ]
+    )
+
+    await callback.message.edit_text(
+        "🎓 <b>МОДУЛЬ 04</b>\n"
+        "<b>КАК УВЕЛИЧИВАТЬ ДОХОД</b>\n\n"
+
+        "BankFlow можно использовать не только "
+        "для собственных банковских продуктов.\n\n"
+
+        "<b>1. Используй подходящие офферы</b>\n"
+        "Не оформляй всё подряд. Выбирай продукты, "
+        "условия которых подходят именно тебе.\n\n"
+
+        "<b>2. Следи за новыми предложениями</b>\n"
+        "Условия и доступные продукты могут меняться, "
+        "поэтому регулярно проверяй BankFlow.\n\n"
+
+        "<b>3. Используй партнёрскую программу</b>\n"
+        "Приглашай людей, которым действительно "
+        "могут быть полезны доступные продукты.\n\n"
+
+        "<b>4. Помогай приглашённым</b>\n"
+        "Объясняй механику BankFlow и напоминай "
+        "внимательно читать условия конкретного "
+        "предложения.\n\n"
+
+        "<b>5. Строй систему</b>\n"
+        "Твоя задача — не сделать одно действие, "
+        "а постепенно разобраться в платформе "
+        "и использовать её возможности системно.\n\n"
+
+        "━━━━━━━━━━━━━━\n\n"
+
+        "💡 <b>Главная идея</b>\n\n"
+
+        "Один пользователь может стать партнёром, "
+        "а партнёр — источником новых пользователей.\n\n"
+
+        "<b>Пользователь → продукт → результат → "
+        "партнёр → новые пользователи</b>\n\n"
+
+        "<blockquote>"
+        "Не обещай людям гарантированный доход. "
+        "Результат зависит от условий продуктов, "
+        "доступности предложений и фактически "
+        "выполненных действий."
+        "</blockquote>",
+
+        reply_markup=keyboard,
+        parse_mode="HTML"
+    )
+
+    await callback.answer()
+
+@dp.callback_query(F.data == "withdrawal_history")
+async def withdrawal_history(callback: CallbackQuery):
+
+    withdrawals = get_user_withdrawals(
+        callback.from_user.id
+    )
+
+    keyboard = InlineKeyboardMarkup(
+        inline_keyboard=[
+            [
+                InlineKeyboardButton(
+                    text="← Личный кабинет",
+                    callback_data="cabinet"
+                )
+            ],
+            [
+                InlineKeyboardButton(
+                    text="🏠 На главную",
+                    callback_data="home"
+                )
+            ]
+        ]
+    )
+
+    if not withdrawals:
+        text = (
+            "💸 <b>История выплат</b>\n\n"
+            "У вас пока нет заявок на выплату."
+        )
+
+    else:
+        text = "💸 <b>История выплат</b>\n\n"
+
+        status_names = {
+            "pending": "🟡 На обработке",
+            "paid": "🟢 Выплачено",
+            "rejected": "🔴 Отклонено"
         }
 
-        achievements_list = [
-            (
-                "first_earning",
-                "🥇 ПЕРВЫЙ ЗАРАБОТОК",
-                "Получи первое вознаграждение",
-                100
-            ),
-            (
-                "500_points",
-                "⭐ 500 БАЛЛОВ",
-                "Набери 500 ⭐",
-                150
-            ),
-            (
-                "10k_earned",
-                "💰 ПЕРВЫЕ 10 000 ₽",
-                "Заработай 10 000 ₽",
-                300
-            ),
-            (
-                "5_referrals",
-                "👥 5 РЕФЕРАЛОВ",
-                "Пригласи 5 пользователей",
-                250
+        for withdrawal in withdrawals:
+            withdrawal_id = withdrawal[0]
+            amount = withdrawal[1]
+            bank = withdrawal[3]
+            status = withdrawal[4]
+
+            status_text = status_names.get(
+                status,
+                status
             )
-        ]
-
-        text = (
-            "🏅 <b>МОИ ДОСТИЖЕНИЯ</b>\n"
-            "━━━━━━━━━━━━━━━━━━\n\n"
-            "Развивайся в BankFlow, выполняй "
-            "условия и получай дополнительные ⭐\n\n"
-        )
-
-        for code, title, description, reward in achievements_list:
-
-            if code in earned_codes:
-                status = "✅ <b>ПОЛУЧЕНО</b>"
-            else:
-                status = "🔒 <b>НЕ ПОЛУЧЕНО</b>"
 
             text += (
-                f"{title}\n"
-                f"<i>{description}</i>\n"
-                f"🎁 Награда: <b>+{reward} ⭐</b>\n"
-                f"{status}\n\n"
+                f"<b>Выплата #{withdrawal_id}</b>\n"
+                f"Сумма: <b>{amount:,} ₽</b>\n"
+                f"Банк: {bank}\n"
+                f"Статус: <b>{status_text}</b>\n\n"
             )
 
-        text += (
-            "━━━━━━━━━━━━━━━━━━\n"
-            "📊 <b>ТВОЯ СТАТИСТИКА</b>\n\n"
-            f"⭐ Баллы: <b>{points:,}</b>\n"
-            f"💰 Заработано: <b>{total_earned:,} ₽</b>\n"
-            f"👥 Рефералов: <b>{referrals}</b>"
-        )
+    await callback.message.edit_text(
+        text,
+        reply_markup=keyboard,
+        parse_mode="HTML"
+    )
 
-        keyboard = InlineKeyboardMarkup(
-            inline_keyboard=[
-                [
-                    InlineKeyboardButton(
-                        text="← В личный кабинет",
-                        callback_data="cabinet"
-                    )
-                ]
+    await callback.answer()
+
+@dp.callback_query(F.data == "magnit_pay")
+async def magnit_pay(callback: CallbackQuery):
+    keyboard = InlineKeyboardMarkup(
+        inline_keyboard=[
+            [
+                InlineKeyboardButton(
+                    text="Оформить карту ↗",
+                    url=MAGNIT_LINK,
+                    style="success"
+                )
+            ],
+            [
+                InlineKeyboardButton(
+                    text="✓ Я выполнил условия",
+                    callback_data="magnit_done",
+                    style="success"
+                )
+            ],
+            [
+                InlineKeyboardButton(
+                    text="← Назад",
+                    callback_data="debit_cards"
+                )
             ]
-        )
-
-        await callback.message.edit_text(
-            text,
-            reply_markup=keyboard,
-            parse_mode="HTML"
-        )
-
-        await callback.answer()
-
-    @dp.callback_query(F.data == "tasks")
-    async def tasks(callback: CallbackQuery):
-
-        user_id = callback.from_user.id
-
-        user = get_user_profile(user_id)
-
-        if not user:
-            await callback.answer(
-                "Профиль не найден",
-                show_alert=True
-            )
-            return
-
-        points = user[4] or 0
-        total_earned = user[6] or 0
-        referrals = get_referral_count(user_id)
-
-        tasks_list = [
-            (
-                "first_earning",
-                "💰 ПОЛУЧИТЬ ПЕРВОЕ ВОЗНАГРАЖДЕНИЕ",
-                "Подтверди первое предложение",
-                total_earned >= 1,
-                100
-            ),
-            (
-                "500_points",
-                "⭐ НАБРАТЬ 500 БАЛЛОВ",
-                "Дойди до 500 ⭐",
-                points >= 500,
-                150
-            ),
-            (
-                "10k_earned",
-                "💵 ЗАРАБОТАТЬ 10 000 ₽",
-                "Заработай 10 000 ₽",
-                total_earned >= 10000,
-                300
-            ),
-            (
-                "5_referrals",
-                "👥 ПРИГЛАСИТЬ 5 РЕФЕРАЛОВ",
-                "Пригласи 5 пользователей",
-                referrals >= 5,
-                250
-            )
         ]
-
-        text = (
-            "🎯 <b>ЗАДАНИЯ</b>\n"
-            "━━━━━━━━━━━━━━━━━━\n\n"
-            "Выполняй задания и получай "
-            "дополнительные ⭐\n\n"
-        )
-
-        for code, title, description, completed, reward in tasks_list:
-
-            if completed:
-                status = "✅ <b>ВЫПОЛНЕНО</b>"
-            else:
-                status = "🔒 <b>В ПРОЦЕССЕ</b>"
-
-            text += (
-                f"{title}\n"
-                f"<i>{description}</i>\n"
-                f"🎁 Награда: <b>+{reward} ⭐</b>\n"
-                f"{status}\n\n"
-            )
-
-        text += (
-            "━━━━━━━━━━━━━━━━━━\n"
-            "💡 Выполняй предложения, "
-            "приглашай пользователей и "
-            "прокачивай свой уровень."
-        )
-
-        keyboard = InlineKeyboardMarkup(
-            inline_keyboard=[
-                [
-                    InlineKeyboardButton(
-                        text="🏅 Достижения",
-                        callback_data="achievements"
-                    )
-                ],
-                [
-                    InlineKeyboardButton(
-                        text="← В личный кабинет",
-                        callback_data="cabinet"
-                    )
-                ]
-            ]
-        )
-
-        await callback.message.edit_text(
-            text,
-            reply_markup=keyboard,
-            parse_mode="HTML"
-        )
-
-        await callback.answer()
-
-    @dp.callback_query(F.data == "academy")
-    async def academy(callback: CallbackQuery):
-
-        user_id = callback.from_user.id
-
-        referral_count = get_referral_count(user_id)
-        active_referral_count = get_active_referral_count(user_id)
-
-        if referral_count < 5 or active_referral_count < 3:
-            await callback.answer(
-                "Академия пока закрыта",
-                show_alert=True
-            )
-            return
-
-        keyboard = InlineKeyboardMarkup(
-            inline_keyboard=[
-                [
-                    InlineKeyboardButton(
-                        text="01 — Как работает BankFlow",
-                        callback_data="academy_1"
-                    )
-                ],
-                [
-                    InlineKeyboardButton(
-                        text="02 — Как выбирать продукты",
-                        callback_data="academy_2"
-                    )
-                ],
-                [
-                    InlineKeyboardButton(
-                        text="03 — Как не терять выплаты",
-                        callback_data="academy_3"
-                    )
-                ],
-                [
-                    InlineKeyboardButton(
-                        text="04 — Как увеличивать доход",
-                        callback_data="academy_4"
-                    )
-                ],
-                [
-                    InlineKeyboardButton(
-                        text="← Партнёрская программа",
-                        callback_data="referral_program"
-                    )
-                ]
-            ]
-        )
-
-        await callback.message.edit_text(
-            "🎓 <b>BANKFLOW ACADEMY</b>\n"
-            "<i>Закрытая академия партнёров</i>\n\n"
-
-            "Добро пожаловать.\n\n"
-
-            "Здесь ты узнаешь, как системно "
-            "работать с банковскими продуктами, "
-            "правильно проходить условия и "
-            "использовать BankFlow эффективнее.\n\n"
-
-            "<b>Твоя программа обучения</b>\n\n"
-
-            "01 — Как работает BankFlow\n"
-            "02 — Как выбирать продукты\n"
-            "03 — Как не терять выплаты\n"
-            "04 — Как увеличивать доход\n\n"
-
-            "<blockquote>"
-            "Проходи модули последовательно. "
-            "Каждый следующий шаг поможет тебе "
-            "эффективнее использовать платформу."
-            "</blockquote>",
-
-            reply_markup=keyboard,
-            parse_mode="HTML"
-        )
-
-        await callback.answer()
-
-    @dp.callback_query(F.data == "academy_1")
-    async def academy_1(callback: CallbackQuery):
-
-        keyboard = InlineKeyboardMarkup(
-            inline_keyboard=[
-                [
-                    InlineKeyboardButton(
-                        text="← К Академии",
-                        callback_data="academy"
-                    )
-                ]
-            ]
-        )
-
-        await callback.message.edit_text(
-            "🎓 <b>МОДУЛЬ 01</b>\n"
-            "<b>КАК РАБОТАЕТ BANKFLOW</b>\n\n"
-
-            "<b>1. Выбираешь продукт</b>\n"
-            "В BankFlow собраны банковские продукты "
-            "с указанием вознаграждения и условий.\n\n"
-
-            "<b>2. Изучаешь условия</b>\n"
-            "Перед оформлением обязательно смотри, "
-            "что именно требуется для получения "
-            "вознаграждения.\n\n"
-
-            "<b>3. Оформляешь продукт</b>\n"
-            "Переходишь по своей ссылке и оформляешь "
-            "продукт по условиям конкретного оффера.\n\n"
-
-            "<b>4. Выполняешь условия</b>\n"
-            "Например: совершить покупку на определённую "
-            "сумму или выполнить другое действие, "
-            "указанное в оффере.\n\n"
-
-            "<b>5. Отправляешь заявку</b>\n"
-            "После выполнения условий заявка попадает "
-            "на проверку.\n\n"
-
-            "<b>6. Получаешь вознаграждение</b>\n"
-            "После подтверждения вознаграждение "
-            "начисляется на баланс BankFlow.\n\n"
-
-            "━━━━━━━━━━━━━━\n\n"
-
-            "💡 <b>Главное правило</b>\n\n"
-            "Не ориентируйся только на размер выплаты.\n"
-            "Сначала смотри условия, требования и "
-            "срок выполнения — и только потом "
-            "оформляй продукт.\n\n"
-
-            "<blockquote>"
-            "BankFlow зарабатывает тогда, когда "
-            "подтверждается реальное действие. "
-            "Поэтому здесь важна не просто регистрация, "
-            "а правильное выполнение условий."
-            "</blockquote>",
-
-            reply_markup=keyboard,
-            parse_mode="HTML"
-        )
-
-        await callback.answer()
-
-    @dp.callback_query(F.data == "academy_2")
-    async def academy_2(callback: CallbackQuery):
-
-        keyboard = InlineKeyboardMarkup(
-            inline_keyboard=[
-                [
-                    InlineKeyboardButton(
-                        text="← К Академии",
-                        callback_data="academy"
-                    )
-                ]
-            ]
-        )
-
-        await callback.message.edit_text(
-            "🎓 <b>МОДУЛЬ 02</b>\n"
-            "<b>КАК ВЫБИРАТЬ ПРОДУКТЫ</b>\n\n"
-
-            "<b>Не всегда самый большой оффер — лучший.</b>\n\n"
-
-            "Перед оформлением смотри на 5 вещей:\n\n"
-
-            "<b>1. Возраст</b>\n"
-            "Проверь, подходит ли тебе возрастной "
-            "диапазон конкретного продукта.\n\n"
-
-            "<b>2. Регион</b>\n"
-            "Некоторые предложения доступны не во всех "
-            "регионах. Проверяй условия перед оформлением.\n\n"
-
-            "<b>3. Требования</b>\n"
-            "Посмотри, нужны ли ФИО, телефон, email "
-            "или другие данные для оформления.\n\n"
-
-            "<b>4. Условие выплаты</b>\n"
-            "Главное — понять, какое действие нужно "
-            "выполнить для получения вознаграждения.\n\n"
-
-            "<b>5. Сложность</b>\n"
-            "Сравнивай не только выплату, но и количество "
-            "действий, которые необходимо выполнить.\n\n"
-
-            "━━━━━━━━━━━━━━\n\n"
-
-            "💡 <b>Простой принцип</b>\n\n"
-
-            "Если один продукт даёт 2 000 ₽ за одно "
-            "простое действие, а другой — 2 500 ₽, "
-            "но требует несколько дополнительных шагов, "
-            "первый может оказаться выгоднее по времени "
-            "и усилиям.\n\n"
-
-            "<blockquote>"
-            "Смотри на оффер целиком: "
-            "выплата + условия + требования + "
-            "сложность + срок."
-            "</blockquote>",
-
-            reply_markup=keyboard,
-            parse_mode="HTML"
-        )
-
-        await callback.answer()
-
-    @dp.callback_query(F.data == "academy_3")
-    async def academy_3(callback: CallbackQuery):
-
-        keyboard = InlineKeyboardMarkup(
-            inline_keyboard=[
-                [
-                    InlineKeyboardButton(
-                        text="← К Академии",
-                        callback_data="academy"
-                    )
-                ]
-            ]
-        )
-
-        await callback.message.edit_text(
-            "🎓 <b>МОДУЛЬ 03</b>\n"
-            "<b>КАК НЕ ТЕРЯТЬ ВЫПЛАТЫ</b>\n\n"
-
-            "Большинство проблем возникает не потому, "
-            "что продукт плохой, а потому что пользователь "
-            "не выполнил одно из условий.\n\n"
-
-            "<b>Перед оформлением:</b>\n\n"
-
-            "☑️ Проверь возраст\n"
-            "☑️ Проверь регион\n"
-            "☑️ Прочитай условия оффера\n"
-            "☑️ Посмотри, какое действие требуется\n"
-            "☑️ Проверь срок выполнения условий\n\n"
-
-            "<b>После оформления:</b>\n\n"
-
-            "☑️ Выполни действие именно так, "
-            "как указано в условиях\n"
-            "☑️ Не пропускай обязательные шаги\n"
-            "☑️ Сохрани подтверждение выполнения, "
-            "если оно может понадобиться\n"
-            "☑️ Следи за статусом заявки в BankFlow\n\n"
-
-            "━━━━━━━━━━━━━━\n\n"
-
-            "⚠️ <b>Главная ошибка</b>\n\n"
-
-            "Не оформляй продукт только потому, "
-            "что видишь большую сумму выплаты.\n\n"
-
-            "Сначала условия → потом действие → "
-            "потом заявка на подтверждение.\n\n"
-
-            "<blockquote>"
-            "Если не уверен, что выполнил условия, "
-            "лучше сначала разобраться, а уже потом "
-            "отправлять заявку на проверку."
-            "</blockquote>",
-
-            reply_markup=keyboard,
-            parse_mode="HTML"
-        )
-
-        await callback.answer()
-
-    @dp.callback_query(F.data == "academy_4")
-    async def academy_4(callback: CallbackQuery):
-
-        keyboard = InlineKeyboardMarkup(
-            inline_keyboard=[
-                [
-                    InlineKeyboardButton(
-                        text="👥 Партнёрская программа",
-                        callback_data="referral_program"
-                    )
-                ],
-                [
-                    InlineKeyboardButton(
-                        text="← К Академии",
-                        callback_data="academy"
-                    )
-                ]
-            ]
-        )
-
-        await callback.message.edit_text(
-            "🎓 <b>МОДУЛЬ 04</b>\n"
-            "<b>КАК УВЕЛИЧИВАТЬ ДОХОД</b>\n\n"
-
-            "BankFlow можно использовать не только "
-            "для собственных банковских продуктов.\n\n"
-
-            "<b>1. Используй подходящие офферы</b>\n"
-            "Не оформляй всё подряд. Выбирай продукты, "
-            "условия которых подходят именно тебе.\n\n"
-
-            "<b>2. Следи за новыми предложениями</b>\n"
-            "Условия и доступные продукты могут меняться, "
-            "поэтому регулярно проверяй BankFlow.\n\n"
-
-            "<b>3. Используй партнёрскую программу</b>\n"
-            "Приглашай людей, которым действительно "
-            "могут быть полезны доступные продукты.\n\n"
-
-            "<b>4. Помогай приглашённым</b>\n"
-            "Объясняй механику BankFlow и напоминай "
-            "внимательно читать условия конкретного "
-            "предложения.\n\n"
-
-            "<b>5. Строй систему</b>\n"
-            "Твоя задача — не сделать одно действие, "
-            "а постепенно разобраться в платформе "
-            "и использовать её возможности системно.\n\n"
-
-            "━━━━━━━━━━━━━━\n\n"
-
-            "💡 <b>Главная идея</b>\n\n"
-
-            "Один пользователь может стать партнёром, "
-            "а партнёр — источником новых пользователей.\n\n"
-
-            "<b>Пользователь → продукт → результат → "
-            "партнёр → новые пользователи</b>\n\n"
-
-            "<blockquote>"
-            "Не обещай людям гарантированный доход. "
-            "Результат зависит от условий продуктов, "
-            "доступности предложений и фактически "
-            "выполненных действий."
-            "</blockquote>",
-
-            reply_markup=keyboard,
-            parse_mode="HTML"
-        )
-
-        await callback.answer()
-
-    @dp.callback_query(F.data == "withdrawal_history")
-    async def withdrawal_history(callback: CallbackQuery):
-
-        withdrawals = get_user_withdrawals(
-            callback.from_user.id
-        )
-
-        keyboard = InlineKeyboardMarkup(
-            inline_keyboard=[
-                [
-                    InlineKeyboardButton(
-                        text="← Личный кабинет",
-                        callback_data="cabinet"
-                    )
-                ],
-                [
-                    InlineKeyboardButton(
-                        text="🏠 На главную",
-                        callback_data="home"
-                    )
-                ]
-            ]
-        )
-
-        if not withdrawals:
-            text = (
-                "💸 <b>История выплат</b>\n\n"
-                "У вас пока нет заявок на выплату."
-            )
-
-        else:
-            text = "💸 <b>История выплат</b>\n\n"
-
-            status_names = {
-                "pending": "🟡 На обработке",
-                "paid": "🟢 Выплачено",
-                "rejected": "🔴 Отклонено"
-            }
-
-            for withdrawal in withdrawals:
-                withdrawal_id = withdrawal[0]
-                amount = withdrawal[1]
-                bank = withdrawal[3]
-                status = withdrawal[4]
-
-                status_text = status_names.get(
-                    status,
-                    status
-                )
-
-                text += (
-                    f"<b>Выплата #{withdrawal_id}</b>\n"
-                    f"Сумма: <b>{amount:,} ₽</b>\n"
-                    f"Банк: {bank}\n"
-                    f"Статус: <b>{status_text}</b>\n\n"
-                )
-
-        await callback.message.edit_text(
-            text,
-            reply_markup=keyboard,
-            parse_mode="HTML"
-        )
-
-        await callback.answer()
-
-    @dp.callback_query(F.data == "my_applications")
-    async def my_applications(callback: CallbackQuery):
-
-        applications = get_user_applications(
-            callback.from_user.id
-        )
-
-        keyboard = InlineKeyboardMarkup(
-            inline_keyboard=[
-                [
-                    InlineKeyboardButton(
-                        text="← Личный кабинет",
-                        callback_data="cabinet"
-                    )
-                ],
-                [
-                    InlineKeyboardButton(
-                        text="🏠 На главную",
-                        callback_data="home"
-                    )
-                ]
-            ]
-        )
-
-        if not applications:
-            text = (
-                "📋 <b>Мои заявки</b>\n\n"
-                "У вас пока нет заявок.\n\n"
-                "<blockquote>"
-                "После оформления предложения "
-                "заявка появится здесь."
-                "</blockquote>"
-            )
-
-        else:
-            text = "📋 <b>Мои заявки</b>\n\n"
-
-            for application in applications:
-                application_id = application[0]
-                offer_name = application[1]
-                reward = application[2]
-                status = application[3]
-
-                status_names = {
-                    "pending": "🟡 На проверке",
-                    "approved": "🟢 Подтверждена",
-                    "rejected": "🔴 Отклонена"
-                }
-
-                status_text = status_names.get(
-                    status,
-                    status
-                )
-
-                text += (
-                    f"<b>Заявка #{application_id}</b>\n"
-                    f"{offer_name}\n"
-                    f"Вознаграждение: <b>{reward:,} ₽</b>\n"
-                    f"Статус: <b>{status_text}</b>\n\n"
-                )
-
-        await callback.message.edit_text(
-            text,
-            reply_markup=keyboard,
-            parse_mode="HTML"
-        )
-
-        await callback.answer()
-
-    @dp.callback_query(F.data == "magnit_pay")
-    async def magnit_pay(callback: CallbackQuery):
-        keyboard = InlineKeyboardMarkup(
-            inline_keyboard=[
-                [
-                    InlineKeyboardButton(
-                        text="Оформить карту ↗",
-                        url=MAGNIT_LINK,
-                        style="success"
-                    )
-                ],
-                [
-                    InlineKeyboardButton(
-                        text="✓ Я выполнил условия",
-                        callback_data="magnit_done",
-                        style="success"
-                    )
-                ],
-                [
-                    InlineKeyboardButton(
-                        text="← Назад",
-                        callback_data="debit_cards"
-                    )
-                ]
-            ]
-        )
-
-        await callback.message.edit_text(
-            "🟢 <b>Магнит Пэй</b>\n"
-            "<i>Дебетовая карта</i>\n\n"
-
-            "💰 <b>Вознаграждение</b>\n"
-            "<code>1 000 ₽</code>\n\n"
-
-            "📝 <b>Что необходимо сделать</b>\n"
-            "Совершить покупку одним чеком от "
-            "<b>500 ₽</b> и оплатить её картой Магнит Пэй.\n\n"
-
-            "🔐 <b>Для проверки понадобятся</b>\n"
-            "• ФИО\n"
-            "• Email\n"
-            "• Номер телефона\n\n"
-
-            "<blockquote>"
-            "Данные используются для идентификации заявки "
-            "и проверки выполнения условий."
-            "</blockquote>",
-            reply_markup=keyboard,
-            parse_mode="HTML"
-        )
-
-        await callback.answer()
+    )
+
+    await callback.message.edit_text(
+        "🟢 <b>Магнит Пэй</b>\n"
+        "<i>Дебетовая карта</i>\n\n"
+
+        "💰 <b>Вознаграждение</b>\n"
+        "<code>1 000 ₽</code>\n\n"
+
+        "📝 <b>Что необходимо сделать</b>\n"
+        "Совершить покупку одним чеком от "
+        "<b>500 ₽</b> и оплатить её картой Магнит Пэй.\n\n"
+
+        "🔐 <b>Для проверки понадобятся</b>\n"
+        "• ФИО\n"
+        "• Email\n"
+        "• Номер телефона\n\n"
+
+        "<blockquote>"
+        "Данные используются для идентификации заявки "
+        "и проверки выполнения условий."
+        "</blockquote>",
+        reply_markup=keyboard,
+        parse_mode="HTML"
+    )
+
+    await callback.answer()
 
 @dp.callback_query(F.data == "withdraw")
 async def withdrawal_from_cabinet(
