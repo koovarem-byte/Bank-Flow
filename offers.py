@@ -33,7 +33,7 @@ OFFERS = {
 
         "reward": 900,
 
-        "min_age": 14,
+        "min_age": 18,
         "max_age": None,
 
         "access": "direct",
@@ -54,7 +54,7 @@ OFFERS = {
 
         "reward": 850,
 
-        "min_age": None,
+        "min_age": 18,
         "max_age": None,
 
         "access": "direct",
@@ -78,7 +78,7 @@ OFFERS = {
 
         "reward": 700,
 
-        "min_age": 14,
+        "min_age": 18,
         "max_age": None,
 
         "access": "direct",
@@ -102,7 +102,7 @@ OFFERS = {
 
         "reward": 1000,
 
-        "min_age": 14,
+        "min_age": 18,
         "max_age": None,
 
         "access": "direct",
