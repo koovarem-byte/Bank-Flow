@@ -21,7 +21,11 @@ from loader import bot
 from offers import (
     OFFERS,
     CATEGORIES,
-    MAGNIT_LINK
+    MAGNIT_LINK,
+    is_credit_offer,
+    ad_label,
+    SAFETY_RULE,
+    CREDIT_WARNING
 )
 from states import PersonalLinkForm, AdminLinkForm
 
@@ -116,6 +120,17 @@ async def show_category(callback: CallbackQuery):
 
     await callback.answer()
 
+def get_link_callback(offer_id, offer):
+    """Куда ведёт кнопка «Получить ссылку» для оффера."""
+    if offer_id == "vtb_rko":
+        return "vtb_call"
+
+    if offer.get("access") == "personal":
+        return f"personal:{offer_id}"
+
+    return f"request_link:{offer_id}"
+
+
 @router.callback_query(F.data.startswith("offer:"))
 async def show_offer(callback: CallbackQuery):
 
@@ -129,17 +144,10 @@ async def show_offer(callback: CallbackQuery):
         )
         return
 
-    if offer_id == "vtb_rko":
-        link_callback = "vtb_call"
+    link_callback = get_link_callback(offer_id, offer)
 
-    elif offer.get("access") == "personal":
-        link_callback = f"personal:{offer_id}"
-
-    elif offer.get("access") == "manual":
-        link_callback = f"request_link:{offer_id}"
-
-    else:
-        link_callback = f"request_link:{offer_id}"
+    if is_credit_offer(offer):
+        link_callback = f"credit_warning:{offer_id}"
 
     keyboard = InlineKeyboardMarkup(
         inline_keyboard=[
@@ -185,10 +193,57 @@ async def show_offer(callback: CallbackQuery):
         "<blockquote>"
         "После получения ссылки оформите предложение "
         "и выполните указанные условия."
-        "</blockquote>",
+        "</blockquote>\n\n"
+
+        f"🛡 {SAFETY_RULE}\n\n"
+
+        f"{ad_label(offer)}",
 
         reply_markup=keyboard,
-        parse_mode="HTML"
+        parse_mode="HTML",
+        disable_web_page_preview=True
+    )
+
+    await callback.answer()
+
+
+@router.callback_query(F.data.startswith("credit_warning:"))
+async def credit_warning(callback: CallbackQuery):
+
+    offer_id = callback.data.split(":")[1]
+    offer = OFFERS.get(offer_id)
+
+    if not offer:
+        await callback.answer(
+            "Предложение не найдено",
+            show_alert=True
+        )
+        return
+
+    keyboard = InlineKeyboardMarkup(
+        inline_keyboard=[
+            [
+                InlineKeyboardButton(
+                    text="Понятно, продолжить",
+                    callback_data=get_link_callback(offer_id, offer)
+                )
+            ],
+            [
+                InlineKeyboardButton(
+                    text="← К предложению",
+                    callback_data=f"offer:{offer_id}"
+                )
+            ]
+        ]
+    )
+
+    await callback.message.edit_text(
+        f"{CREDIT_WARNING}\n\n"
+        f"<b>{offer['name']}</b> — {offer['type']}\n\n"
+        f"{ad_label(offer)}",
+        reply_markup=keyboard,
+        parse_mode="HTML",
+        disable_web_page_preview=True
     )
 
     await callback.answer()
@@ -876,10 +931,19 @@ async def admin_personal_link(
             "<blockquote>"
             "После выполнения условий вернитесь "
             "в бот и нажмите «Я выполнил условия»."
-            "</blockquote>",
+            "</blockquote>\n\n"
+
+            + (
+                f"{CREDIT_WARNING}\n\n"
+                if is_credit_offer(offer)
+                else ""
+            )
+            + f"🛡 {SAFETY_RULE}\n\n"
+            + ad_label(offer, link),
 
             reply_markup=user_keyboard,
-            parse_mode="HTML"
+            parse_mode="HTML",
+            disable_web_page_preview=True
         )
 
     except Exception as error:
@@ -1083,9 +1147,12 @@ async def magnit_pay(callback: CallbackQuery):
         "<blockquote>"
         "Данные используются для идентификации заявки "
         "и проверки выполнения условий."
-        "</blockquote>",
+        "</blockquote>\n\n"
+        f"🛡 {SAFETY_RULE}\n\n"
+        f"{ad_label(OFFERS['magnit_pay'], MAGNIT_LINK)}",
         reply_markup=keyboard,
-        parse_mode="HTML"
+        parse_mode="HTML",
+        disable_web_page_preview=True
     )
 
     await callback.answer()

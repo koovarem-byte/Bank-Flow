@@ -1,3 +1,5 @@
+from urllib.parse import urlparse, parse_qs
+
 MAGNIT_LINK = "https://lk.bs-rko.ru/click?q=MzY0Nnxwcm9kdWN0"
 
 OFFERS = {
@@ -292,3 +294,54 @@ CATEGORIES = {
         "icon": "🏢"
     }
 }
+
+# Категории кредитных продуктов: перед ссылкой показывается предупреждение
+CREDIT_CATEGORIES = ("credit", "mfo")
+
+
+def is_credit_offer(offer):
+    return offer.get("category") in CREDIT_CATEGORIES
+
+
+def get_erid(link):
+    """erid из ссылки (маркировка рекламы), если он там есть."""
+    if not link:
+        return None
+
+    values = parse_qs(urlparse(link).query).get("erid")
+
+    return values[0] if values else None
+
+
+def ad_label(offer, link=None):
+    """Пометка «Реклама» + рекламодатель + erid + ссылка на условия (HTML).
+
+    advertiser — юрлицо рекламодателя из данных сети (заполнить в OFFERS),
+    пока не заполнено — показывается название банка.
+    """
+    advertiser = offer.get("advertiser") or offer["name"]
+    erid = get_erid(link) or get_erid(offer.get("link"))
+
+    text = f"Реклама. Рекламодатель: {advertiser}"
+
+    if erid:
+        text += f". erid: {erid}"
+
+    if offer.get("terms_url"):
+        text += f"\n<a href=\"{offer['terms_url']}\">Полные условия банка</a>"
+
+    return f"<i>{text}</i>"
+
+
+SAFETY_RULE = (
+    "Оформляйте продукт только на себя. Никому не передавайте "
+    "карту, данные и коды из СМС. BankFlow никогда не спрашивает "
+    "пароли, коды и данные карт."
+)
+
+CREDIT_WARNING = (
+    "⚠️ <b>ЭТО КРЕДИТНЫЙ ПРОДУКТ</b>\n\n"
+    "Внимательно прочитайте условия, ставку и сроки. "
+    "Оформляйте, только если уверены, что вернёте вовремя — "
+    "просрочка ведёт к штрафам и испорченной кредитной истории."
+)
