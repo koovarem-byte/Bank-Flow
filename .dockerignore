@@ -1,0 +1,13 @@
+.env
+*.db
+*.sqlite
+*.sqlite3
+.git
+.venv
+venv
+__pycache__
+*.pyc
+.idea
+.vscode
+*.zip
+*.bundle
