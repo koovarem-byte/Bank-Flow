@@ -8,9 +8,12 @@ from config import PORT
 from database import create_tables
 from handlers import routers
 from loader import bot
+from middlewares import OnboardingMiddleware
 
 
 dp = Dispatcher()
+dp.message.outer_middleware(OnboardingMiddleware())
+dp.callback_query.outer_middleware(OnboardingMiddleware())
 dp.include_routers(*routers)
 
 

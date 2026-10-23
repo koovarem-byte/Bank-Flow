@@ -19,6 +19,7 @@ from database import (
     get_milestone_100,
     set_milestone_100
 )
+from handlers.onboarding import is_onboarded, send_onboarding
 from loader import bot
 
 
@@ -65,6 +66,10 @@ async def start(message: Message):
             "и запускать следующий этап.",
             parse_mode="HTML"
         )
+    if not is_onboarded(message.from_user.id):
+        await send_onboarding(message, message.from_user.id)
+        return
+
     remove_message = await message.answer(
         "Обновляем интерфейс...",
         reply_markup=ReplyKeyboardRemove()

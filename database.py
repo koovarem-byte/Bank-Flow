@@ -43,6 +43,21 @@ def create_tables():
     """)
 
     cursor.execute("""
+        ALTER TABLE users
+        ADD COLUMN IF NOT EXISTS age_confirmed_at TIMESTAMP
+    """)
+
+    cursor.execute("""
+        ALTER TABLE users
+        ADD COLUMN IF NOT EXISTS pd_consent_at TIMESTAMP
+    """)
+
+    cursor.execute("""
+        ALTER TABLE users
+        ADD COLUMN IF NOT EXISTS pd_consent_version TEXT
+    """)
+
+    cursor.execute("""
         CREATE TABLE IF NOT EXISTS applications (
             id BIGSERIAL PRIMARY KEY,
             telegram_id BIGINT,
@@ -1136,6 +1151,79 @@ def set_link_request_comment(request_id, comment):
     """, (
         comment,
         request_id
+    ))
+
+    updated = cursor.rowcount
+
+    conn.commit()
+    cursor.close()
+    conn.close()
+
+    return updated > 0
+
+
+def get_onboarding_status(telegram_id):
+    """(возраст подтверждён, версия согласия на обработку ПД или None)."""
+    conn = connect()
+    cursor = conn.cursor()
+
+    cursor.execute("""
+        SELECT age_confirmed_at, pd_consent_version
+        FROM users
+        WHERE telegram_id = %s
+    """, (telegram_id,))
+
+    result = cursor.fetchone()
+
+    cursor.close()
+    conn.close()
+
+    if not result:
+        return False, None
+
+    return result[0] is not None, result[1]
+
+
+def confirm_age(telegram_id, username, full_name):
+    conn = connect()
+    cursor = conn.cursor()
+
+    cursor.execute("""
+        INSERT INTO users (
+            telegram_id,
+            username,
+            full_name,
+            age_confirmed_at
+        )
+        VALUES (%s, %s, %s, CURRENT_TIMESTAMP)
+        ON CONFLICT (telegram_id) DO UPDATE
+        SET age_confirmed_at = COALESCE(
+            users.age_confirmed_at,
+            CURRENT_TIMESTAMP
+        )
+    """, (
+        telegram_id,
+        username,
+        full_name
+    ))
+
+    conn.commit()
+    cursor.close()
+    conn.close()
+
+
+def set_pd_consent(telegram_id, version):
+    conn = connect()
+    cursor = conn.cursor()
+
+    cursor.execute("""
+        UPDATE users
+        SET pd_consent_at = CURRENT_TIMESTAMP,
+            pd_consent_version = %s
+        WHERE telegram_id = %s
+    """, (
+        version,
+        telegram_id
     ))
 
     updated = cursor.rowcount

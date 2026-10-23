@@ -29,10 +29,11 @@
 - `main.py` — точка входа: `Dispatcher`, подключение роутеров, health-сервер aiohttp, polling.
 - `config.py` — переменные окружения (`BOT_TOKEN`, `DATABASE_URL`, `ADMIN_ID`, `SUPPORT_USERNAME`, `PORT`), понятная ошибка при отсутствии. Шаблон — `.env.example`.
 - `loader.py` — объект `bot`. `states.py` — все FSM-состояния.
-- `handlers/` — роутеры aiogram, порядок подключения в `handlers/__init__.py` важен (обработчики сообщений без фильтра состояния срабатывают в любом состоянии): `menu` (старт, главное меню) → `admin` (админка, заявки, комментарии, `/broadcast100`) → `academy` → `business` (самозанятость/ИП/РКО, вопросы админу, звонок ВТБ) → `catalog` (категории, карточка оффера, персональные ссылки, «Выполнил») → `cabinet` (кабинет, продукты, рефералы, достижения, задания, заявки) → `legacy` (старая reply-клавиатура, кандидаты на удаление) → `withdrawals` (вывод, выплаты).
+- `privacy.py` — политика конфиденциальности и текст согласия (`PRIVACY_VERSION`: при смене текста пользователи подтверждают заново). `middlewares.py` — `OnboardingMiddleware`: пока нет 18+ и согласия на ПД, пускает только `/start`, `/privacy` и кнопки входа (админ проходит всегда).
+- `handlers/` — роутеры aiogram, порядок подключения в `handlers/__init__.py` важен (обработчики сообщений без фильтра состояния срабатывают в любом состоянии): `onboarding` (18+, согласие, `/privacy`) → `menu` (старт, главное меню) → `admin` (админка, заявки, комментарии, `/broadcast100`) → `academy` → `business` (самозанятость/ИП/РКО, вопросы админу, звонок ВТБ) → `catalog` (категории, карточка оффера, персональные ссылки, «Выполнил») → `cabinet` (кабинет, продукты, рефералы, достижения, задания, заявки) → `legacy` (старая reply-клавиатура, кандидаты на удаление) → `withdrawals` (вывод, выплаты).
 - `database.py` — все запросы к Postgres, `create_tables()`.
 - `offers.py` — `MAGNIT_LINK`, словарь `OFFERS` (name, category, type, reward, min_age, max_age, access: `direct`/`personal`/`manual`, link, condition, requirements) и `CATEGORIES`.
-- Таблицы: `users` (balance, points, level, total_earned, created_at), `applications`, `withdrawals`, `link_requests`, `referrals`, `referral_rewards`, `achievements`, `user_products`, `balance_history` (income/expense).
+- Таблицы: `users` (balance, points, level, total_earned, created_at), `applications`, `withdrawals`, `link_requests`, `referrals`, `referral_rewards`, `achievements`, `user_products`, `balance_history` (income/expense). В `users` также `age_confirmed_at`, `pd_consent_at`, `pd_consent_version`.
 
 ## Что нашло ревью (20.10–23.10.2026, по чтению кода; подтверждай запуском)
 
