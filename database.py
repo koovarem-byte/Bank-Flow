@@ -76,6 +76,28 @@ def create_tables():
     """)
 
     cursor.execute("""
+        ALTER TABLE applications
+        ADD COLUMN IF NOT EXISTS offer_id TEXT
+    """)
+
+    # Без DEFAULT при добавлении: у старых строк дата неизвестна (NULL),
+    # а не дата миграции
+    cursor.execute("""
+        ALTER TABLE applications
+        ADD COLUMN IF NOT EXISTS created_at TIMESTAMP
+    """)
+
+    cursor.execute("""
+        ALTER TABLE applications
+        ALTER COLUMN created_at SET DEFAULT CURRENT_TIMESTAMP
+    """)
+
+    cursor.execute("""
+        ALTER TABLE applications
+        ADD COLUMN IF NOT EXISTS reviewed_at TIMESTAMP
+    """)
+
+    cursor.execute("""
         CREATE TABLE IF NOT EXISTS withdrawals (
             id BIGSERIAL PRIMARY KEY,
             telegram_id BIGINT,
@@ -117,6 +139,23 @@ def create_tables():
     cursor.execute("""
         ALTER TABLE link_requests
         ADD COLUMN IF NOT EXISTS admin_comment TEXT
+    """)
+
+    # Без DEFAULT при добавлении: у старых строк дата неизвестна (NULL),
+    # а не дата миграции
+    cursor.execute("""
+        ALTER TABLE link_requests
+        ADD COLUMN IF NOT EXISTS created_at TIMESTAMP
+    """)
+
+    cursor.execute("""
+        ALTER TABLE link_requests
+        ALTER COLUMN created_at SET DEFAULT CURRENT_TIMESTAMP
+    """)
+
+    cursor.execute("""
+        ALTER TABLE link_requests
+        ADD COLUMN IF NOT EXISTS issued_at TIMESTAMP
     """)
 
     cursor.execute("""
@@ -273,7 +312,8 @@ def complete_link_request(request_id, personal_link):
     cursor.execute("""
         UPDATE link_requests
         SET personal_link = %s,
-            status = 'ready'
+            status = 'ready',
+            issued_at = CURRENT_TIMESTAMP
         WHERE id = %s
         AND status = 'pending'
     """, (
@@ -411,7 +451,8 @@ def create_application(
     reward,
     fio,
     email,
-    phone
+    phone,
+    offer_id=None
 ):
     conn = connect()
     cursor = conn.cursor()
@@ -423,9 +464,10 @@ def create_application(
             reward,
             fio,
             email,
-            phone
+            phone,
+            offer_id
         )
-        VALUES (%s, %s, %s, %s, %s, %s)
+        VALUES (%s, %s, %s, %s, %s, %s, %s)
         RETURNING id
     """, (
         telegram_id,
@@ -433,7 +475,8 @@ def create_application(
         reward,
         fio,
         email,
-        phone
+        phone,
+        offer_id
     ))
 
     application_id = cursor.fetchone()[0]
@@ -450,7 +493,19 @@ def get_application(application_id):
     cursor = conn.cursor()
 
     cursor.execute("""
-        SELECT *
+        SELECT
+            id,
+            telegram_id,
+            offer_name,
+            reward,
+            fio,
+            email,
+            phone,
+            status,
+            admin_comment,
+            offer_id,
+            created_at,
+            reviewed_at
         FROM applications
         WHERE id = %s
     """, (application_id,))
@@ -469,7 +524,8 @@ def update_application_status(application_id, status):
 
     cursor.execute("""
         UPDATE applications
-        SET status = %s
+        SET status = %s,
+            reviewed_at = CURRENT_TIMESTAMP
         WHERE id = %s
     """, (
         status,
@@ -606,7 +662,13 @@ def get_withdrawal(withdrawal_id):
     cursor = conn.cursor()
 
     cursor.execute("""
-        SELECT *
+        SELECT
+            id,
+            telegram_id,
+            amount,
+            phone,
+            bank,
+            status
         FROM withdrawals
         WHERE id = %s
     """, (withdrawal_id,))
@@ -1233,3 +1295,26 @@ def set_pd_consent(telegram_id, version):
     conn.close()
 
     return updated > 0
+
+
+def get_link_issued_at(telegram_id, offer_id):
+    """Когда пользователю последний раз выдали ссылку на оффер (или None)."""
+    conn = connect()
+    cursor = conn.cursor()
+
+    cursor.execute("""
+        SELECT MAX(issued_at)
+        FROM link_requests
+        WHERE telegram_id = %s
+        AND offer_id = %s
+    """, (
+        telegram_id,
+        offer_id
+    ))
+
+    result = cursor.fetchone()
+
+    cursor.close()
+    conn.close()
+
+    return result[0] if result else None

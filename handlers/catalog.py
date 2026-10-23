@@ -15,7 +15,8 @@ from database import (
     get_link_request,
     complete_link_request,
     create_application,
-    has_pending_application
+    has_pending_application,
+    get_link_issued_at
 )
 from loader import bot
 from offers import (
@@ -1017,7 +1018,19 @@ async def offer_done(callback: CallbackQuery):
         reward=offer["reward"],
         fio="",
         email="",
-        phone=""
+        phone="",
+        offer_id=offer_id
+    )
+
+    link_issued_at = get_link_issued_at(
+        callback.from_user.id,
+        offer_id
+    )
+
+    link_issued_text = (
+        link_issued_at.strftime("%d.%m.%Y %H:%M")
+        if link_issued_at
+        else "не выдавалась через бот"
     )
 
     admin_keyboard = InlineKeyboardMarkup(
@@ -1058,10 +1071,13 @@ async def offer_done(callback: CallbackQuery):
         ADMIN_ID,
         "📋 <b>НОВАЯ ЗАЯВКА НА ПРОВЕРКУ</b>\n\n"
         f"<b>Заявка:</b> #{application_id}\n"
-        f"<b>Предложение:</b> {offer['name']}\n"
+        f"<b>Предложение:</b> {offer['name']} "
+        f"(<code>{offer_id}</code>)\n"
         f"<b>Вознаграждение:</b> {offer['reward']:,} ₽\n\n"
         f"Telegram: {username_text}\n"
-        f"ID: <code>{callback.from_user.id}</code>\n\n"
+        f"ID: <code>{callback.from_user.id}</code>\n"
+        f"subid для сверки в сети: <code>{callback.from_user.id}</code>\n\n"
+        f"<b>Ссылка выдана:</b> {link_issued_text}\n\n"
         "<blockquote>"
         "Пользователь сообщил о выполнении условий."
         "</blockquote>",
