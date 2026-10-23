@@ -1,3 +1,5 @@
+MAGNIT_LINK = "https://lk.bs-rko.ru/click?q=MzY0Nnxwcm9kdWN0"
+
 OFFERS = {
     "magnit_pay": {
         "name": "Магнит Пэй",

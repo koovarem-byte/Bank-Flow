@@ -26,10 +26,13 @@
 
 ## Стек и файлы
 - Python, aiogram 3, PostgreSQL через `psycopg2` (синхронно), aiohttp (health-сервер для хостинга), python-dotenv. Версии в `requirements.txt` не закреплены — закрепи.
-- `main.py` (~6300 строк) — весь бот: меню, офферы, кабинет, рефералы, «Академия», задания/достижения, уровни и баллы, бизнес-раздел (самозанятость/ИП/РКО, вопросы админу, звонок ВТБ), персональные ссылки, заявки, выплаты, админка (`/admin`, пользователи, статистика, изменение баланса/баллов/уровня, комментарии, рассылка `/broadcast100`).
+- `main.py` — точка входа: `Dispatcher`, подключение роутеров, health-сервер aiohttp, polling.
+- `config.py` — переменные окружения (`BOT_TOKEN`, `DATABASE_URL`, `ADMIN_ID`, `SUPPORT_USERNAME`, `PORT`), понятная ошибка при отсутствии. Шаблон — `.env.example`.
+- `loader.py` — объект `bot`. `states.py` — все FSM-состояния.
+- `handlers/` — роутеры aiogram, порядок подключения в `handlers/__init__.py` важен (обработчики сообщений без фильтра состояния срабатывают в любом состоянии): `menu` (старт, главное меню) → `admin` (админка, заявки, комментарии, `/broadcast100`) → `academy` → `business` (самозанятость/ИП/РКО, вопросы админу, звонок ВТБ) → `catalog` (категории, карточка оффера, персональные ссылки, «Выполнил») → `cabinet` (кабинет, продукты, рефералы, достижения, задания, заявки) → `legacy` (старая reply-клавиатура, кандидаты на удаление) → `withdrawals` (вывод, выплаты).
 - `database.py` — все запросы к Postgres, `create_tables()`.
-- `offers.py` — словарь `OFFERS` (name, category, type, reward, min_age, max_age, access: `direct`/`personal`/`manual`, link, condition, requirements) и `CATEGORIES`.
-- Таблицы: `users` (balance, points, level, total_earned, created_at), `applications`, `withdrawals`, `link_requests`, `referrals`, `referral_rewards`, `achievements`, `user_products`.
+- `offers.py` — `MAGNIT_LINK`, словарь `OFFERS` (name, category, type, reward, min_age, max_age, access: `direct`/`personal`/`manual`, link, condition, requirements) и `CATEGORIES`.
+- Таблицы: `users` (balance, points, level, total_earned, created_at), `applications`, `withdrawals`, `link_requests`, `referrals`, `referral_rewards`, `achievements`, `user_products`, `balance_history` (income/expense).
 
 ## Что нашло ревью (20.10–23.10.2026, по чтению кода; подтверждай запуском)
 
@@ -50,6 +53,13 @@
 9. `CATEGORIES` определён и в `offers.py`, и заново в `main.py` (перезаписывает импорт). Один источник — `offers.py`.
 10. `ADMIN_ID` и ник поддержки захардкожены — в переменные окружения.
 11. psycopg2 — синхронные запросы в асинхронном боте: при росте нагрузки бот будет «подвисать». Для старта допустимо; в плане — переход на asyncpg с пулом.
+
+### Найдено при работе (23.10.2026)
+- Статус фаз 0–1 (P0.1–P0.3, P1.7–P1.10) — исправлено, проверено запуском на тестовом Postgres; детали в `PLAN.md` и `git log`.
+- Кнопки без обработчика (не работали и раньше): `add_product` («➕ Добавить продукт» в «Мои продукты»), `debit_cards`, `magnit_done`.
+- `handlers/business.py` (`receive_business_question`): клавиатура для админа (`admin_keyboard`) собирается, но не отправляется — у вопроса из бизнес-раздела, вероятно, нет кнопки «Ответить».
+- Академия: `academy_1`–`academy_4` не проверяют доступ (открыть можно любым callback), проверка есть только в `academy`.
+- Статус заявки берётся по индексу (`application[7]`, `withdrawal[5]`) из `SELECT *` — зависит от порядка колонок в боевой базе; при правках (P2.13) перейти на явный список колонок.
 
 ### P2 — учёт лидов (важно для денег)
 12. Сейчас нет автоматической связи «клиент → заявка в сети»: админ сверяет вручную. Цель: к каждой прямой ссылке добавлять subid с Telegram ID пользователя (у сетей обычно параметры вида `sub1`/`subid`/`aff_sub` — уточни по документации каждой сети, не по памяти), а позже — приём постбэков от сетей (эндпоинт в aiohttp) для автоматической смены статуса заявки. Пока постбэков нет — оставить ручное подтверждение, но показывать админу subid и дату перехода.
