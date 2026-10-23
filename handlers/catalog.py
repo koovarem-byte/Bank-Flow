@@ -1036,7 +1036,7 @@ async def offer_done(callback: CallbackQuery):
                     callback_data=f"reject_app:{application_id}",
                     style="danger"
                 )
-            ]
+            ],
             [
                 InlineKeyboardButton(
                     text="💬 Написать комментарий",
