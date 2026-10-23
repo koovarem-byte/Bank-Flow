@@ -621,42 +621,6 @@ def update_withdrawal_status(withdrawal_id, status):
     cursor.close()
     conn.close()
 
-    def subtract_balance(telegram_id, amount):
-        conn = connect()
-        cursor = conn.cursor()
-
-        cursor.execute(
-            """
-            UPDATE users
-            SET balance = balance - %s
-            WHERE telegram_id = %s
-            AND balance >= %s
-            """,
-            (amount, telegram_id, amount)
-        )
-
-        success = cursor.rowcount > 0
-
-        conn.commit()
-        cursor.close()
-        conn.close()
-
-        return success
-def get_users_count():
-    conn = connect()
-    cursor = conn.cursor()
-
-    cursor.execute("""
-        SELECT COUNT(*)
-        FROM users
-    """)
-
-    result = cursor.fetchone()
-
-    cursor.close()
-    conn.close()
-
-    return result[0] if result else 0
 
 def get_users_count():
     conn = connect()
@@ -673,6 +637,8 @@ def get_users_count():
     conn.close()
 
     return result[0] if result else 0
+
+
 def get_all_users():
     conn = connect()
     cursor = conn.cursor()

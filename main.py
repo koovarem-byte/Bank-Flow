@@ -32,7 +32,6 @@ from database import (
     get_application,
     update_application_status,
     add_balance,
-    get_user_applications,
     get_link_request,
     complete_link_request,
     create_withdrawal,
@@ -58,8 +57,7 @@ from database import (
     get_milestone_100,
     set_milestone_100,
     set_application_comment,
-    set_link_request_comment,
-    get_link_request
+    set_link_request_comment
 )
 
 from config import (
@@ -70,34 +68,7 @@ from config import (
     PORT
 )
 
-from offers import OFFERS,CATEGORIES
-
-CATEGORIES = {
-    "debit": {
-        "name": "Дебетовые карты",
-        "icon": "💳"
-    },
-
-    "credit": {
-        "name": "Кредитные карты",
-        "icon": "💳"
-    },
-
-    "business": {
-        "name": "Для бизнеса",
-        "icon": "🏢"
-    },
-
-    "invest": {
-        "name": "Инвестиции",
-        "icon": "📈"
-    },
-
-    "mfo": {
-        "name": "МФО",
-        "icon": "₽"
-    }
-}
+from offers import OFFERS, CATEGORIES
 
 MAGNIT_LINK = "https://lk.bs-rko.ru/click?q=MzY0Nnxwcm9kdWN0"
 
@@ -301,13 +272,6 @@ async def show_admin_users(callback: CallbackQuery, page: int = 0):
 async def admin_users(callback: CallbackQuery):
     await show_admin_users(callback, page=0)
 
-
-@dp.callback_query(F.data.startswith("admin_users_page:"))
-async def admin_users_page(callback: CallbackQuery):
-
-    page = int(callback.data.split(":")[1])
-
-    await show_admin_users(callback, page=page)
 
 @dp.callback_query(F.data.startswith("admin_users_page:"))
 async def admin_users_page(callback: CallbackQuery):
@@ -5254,129 +5218,6 @@ async def withdrawal_start(
     )
 
 
-@dp.message(WithdrawalForm.amount)
-async def withdrawal_amount(
-    message: Message,
-    state: FSMContext
-):
-
-    try:
-        amount = int(
-            message.text
-            .replace(" ", "")
-            .replace("₽", "")
-        )
-    except ValueError:
-        await message.answer(
-            "Введите сумму цифрами."
-        )
-        return
-
-    available = get_available_balance(
-        message.from_user.id
-    )
-
-    if amount <= 0:
-        await message.answer(
-            "Сумма должна быть больше 0 ₽."
-        )
-        return
-
-    if amount > available:
-        await message.answer(
-            f"Недостаточно средств.\n\n"
-            f"Доступно: {available:,} ₽"
-        )
-        return
-
-    await state.update_data(amount=amount)
-
-    await state.set_state(
-        WithdrawalForm.phone
-    )
-
-    await message.answer(
-        "📱 Введите номер телефона, "
-        "к которому подключена СБП:"
-    )
-
-
-@dp.message(WithdrawalForm.phone)
-async def withdrawal_phone(
-    message: Message,
-    state: FSMContext
-):
-
-    await state.update_data(
-        phone=message.text
-    )
-
-    await state.set_state(
-        WithdrawalForm.bank
-    )
-
-    await message.answer(
-        "🏦 Введите банк для перевода по СБП:"
-    )
-
-
-@dp.message(WithdrawalForm.bank)
-async def withdrawal_bank(
-    message: Message,
-    state: FSMContext
-):
-
-    await state.update_data(
-        bank=message.text
-    )
-
-    data = await state.get_data()
-
-    withdrawal_id = create_withdrawal(
-        telegram_id=message.from_user.id,
-        amount=data["amount"],
-        phone=data["phone"],
-        bank=data["bank"]
-    )
-
-    await state.clear()
-
-    await message.answer(
-        "🟡 Заявка на выплату создана\n\n"
-        f"Сумма: {data['amount']:,} ₽\n"
-        f"СБП: {data['phone']}\n"
-        f"Банк: {data['bank']}"
-    )
-
-    admin_keyboard = InlineKeyboardMarkup(
-        inline_keyboard=[
-            [
-                InlineKeyboardButton(
-                    text="✅ Выплачено",
-                    callback_data=f"paid:{withdrawal_id}"
-                )
-            ],
-            [
-                InlineKeyboardButton(
-                    text="❌ Отклонить",
-                    callback_data=f"reject_withdrawal:{withdrawal_id}"
-                )
-            ]
-        ]
-    )
-
-    await bot.send_message(
-        ADMIN_ID,
-        "💸 НОВАЯ ЗАЯВКА НА ВЫПЛАТУ\n\n"
-        f"ID: {withdrawal_id}\n"
-        f"Сумма: {data['amount']:,} ₽\n"
-        f"СБП: {data['phone']}\n"
-        f"Банк: {data['bank']}\n"
-        f"Telegram ID: {message.from_user.id}",
-        reply_markup=admin_keyboard
-    )
-
-
 @dp.callback_query(F.data.startswith("reject_withdrawal:"))
 async def reject_withdrawal(callback: CallbackQuery):
 
@@ -5434,55 +5275,6 @@ async def reject_withdrawal(callback: CallbackQuery):
     )
 
     await callback.answer("Отклонено")
-
-@dp.callback_query(
-    F.data.startswith("reject_withdrawal:")
-)
-async def reject_withdrawal(callback: CallbackQuery):
-
-    if callback.from_user.id != ADMIN_ID:
-        return
-
-    withdrawal_id = int(
-        callback.data.split(":")[1]
-    )
-
-    withdrawal = get_withdrawal(withdrawal_id)
-
-    if not withdrawal:
-        await callback.answer(
-            "Заявка не найдена",
-            show_alert=True
-        )
-        return
-
-    if withdrawal[5] != "pending":
-        await callback.answer(
-            "Эта выплата уже обработана",
-            show_alert=True
-        )
-        return
-
-    if not withdrawal:
-        return
-
-    update_withdrawal_status(
-        withdrawal_id,
-        "rejected"
-    )
-
-    await callback.message.edit_reply_markup(
-        reply_markup=None
-    )
-
-    await bot.send_message(
-        withdrawal[1],
-        "❌ Заявка на выплату отклонена.\n\n"
-        "Средства снова доступны на вашем балансе."
-    )
-
-    await callback.answer("Отклонено")
-
 
 @dp.message(F.text == "👨‍💻 Поддержка")
 async def support(message: Message):
@@ -5770,7 +5562,11 @@ async def cabinet_withdraw(callback: CallbackQuery, state: FSMContext):
 async def withdrawal_amount(message: Message, state: FSMContext):
 
     try:
-        amount = int(message.text.strip())
+        amount = int(
+            message.text
+            .replace(" ", "")
+            .replace("₽", "")
+        )
     except ValueError:
         await message.answer(
             "⚠️ <b>Некорректная сумма</b>\n\n"

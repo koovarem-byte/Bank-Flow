@@ -277,7 +277,7 @@ CATEGORIES = {
 
     "mfo": {
         "name": "МФО",
-        "icon": "💰"
+        "icon": "₽"
     },
 
     "invest": {
