@@ -1,0 +1,17 @@
+# Секреты
+.env
+
+# Базы данных (bankflow.db может содержать ПД)
+*.db
+*.sqlite
+*.sqlite3
+
+# Окружение и кэш
+venv/
+.venv/
+__pycache__/
+*.pyc
+
+# IDE
+.idea/
+.vscode/
