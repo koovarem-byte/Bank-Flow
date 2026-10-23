@@ -144,6 +144,22 @@ def create_tables():
         )
     """)
 
+    cursor.execute("""
+        CREATE TABLE IF NOT EXISTS balance_history (
+            id BIGSERIAL PRIMARY KEY,
+            telegram_id BIGINT NOT NULL,
+            amount INTEGER NOT NULL,
+            operation_type TEXT NOT NULL,
+            description TEXT,
+            created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
+        )
+    """)
+
+    cursor.execute("""
+        CREATE INDEX IF NOT EXISTS idx_balance_history_user
+        ON balance_history (telegram_id)
+    """)
+
     conn.commit()
     cursor.close()
     conn.close()
@@ -334,7 +350,7 @@ def add_balance(telegram_id, amount, description="Пополнение бала�
     conn.close()
 
 
-def subtract_balance(telegram_id, amount):
+def subtract_balance(telegram_id, amount, description="Списание с баланса"):
     conn = connect()
     cursor = conn.cursor()
 
@@ -350,6 +366,22 @@ def subtract_balance(telegram_id, amount):
     ))
 
     success = cursor.rowcount > 0
+
+    if success:
+        cursor.execute("""
+            INSERT INTO balance_history (
+                telegram_id,
+                amount,
+                operation_type,
+                description
+            )
+            VALUES (%s, %s, %s, %s)
+        """, (
+            telegram_id,
+            amount,
+            "expense",
+            description
+        ))
 
     conn.commit()
     cursor.close()

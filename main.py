@@ -712,10 +712,14 @@ async def admin_user_value(message: Message, state: FSMContext):
     elif action == "balance":
 
         if amount > 0:
-            add_balance(user_id, amount)
+            add_balance(user_id, amount, "Ручное начисление админом")
             result = f"+{amount:,} ₽"
         else:
-            success = subtract_balance(user_id, abs(amount))
+            success = subtract_balance(
+                user_id,
+                abs(amount),
+                "Ручное списание админом"
+            )
 
             if not success:
                 await message.answer(
@@ -4448,7 +4452,8 @@ async def approve_application(callback: CallbackQuery):
     # Начисляем деньги
     add_balance(
         telegram_id,
-        reward
+        reward,
+        f"Заявка #{application_id}: {offer_name}"
     )
 
     # Начисляем баллы
@@ -4506,7 +4511,8 @@ async def approve_application(callback: CallbackQuery):
 
             add_balance(
                 referrer_id,
-                referral_reward
+                referral_reward,
+                f"Реферальное вознаграждение за заявку #{application_id}"
             )
 
             add_points(
@@ -6019,7 +6025,8 @@ async def paid_withdrawal(callback: CallbackQuery):
 
     if not subtract_balance(
         telegram_id,
-        amount
+        amount,
+        f"Выплата #{withdrawal_id}"
     ):
         await callback.answer(
             "Недостаточно средств на балансе",
