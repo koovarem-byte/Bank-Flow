@@ -9,6 +9,7 @@ from database import create_tables
 from handlers import routers
 from loader import bot
 from middlewares import OnboardingMiddleware
+from webapp.api import setup_webapp
 
 
 dp = Dispatcher()
@@ -26,6 +27,7 @@ async def main():
 
     app = web.Application()
     app.router.add_get("/", health_check)
+    setup_webapp(app)
 
     runner = web.AppRunner(app)
     await runner.setup()

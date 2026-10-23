@@ -35,6 +35,10 @@ ONBOARDING_CALLBACKS = {
 _passed = set()
 
 
+def mark_onboarded(telegram_id):
+    _passed.add(telegram_id)
+
+
 def is_onboarded(telegram_id):
     if telegram_id in _passed:
         return True
@@ -181,7 +185,7 @@ async def pd_accept(callback: CallbackQuery):
         return
 
     set_pd_consent(user_id, PRIVACY_VERSION)
-    _passed.add(user_id)
+    mark_onboarded(user_id)
 
     await callback.message.edit_text(
         "✅ <b>Готово</b>\n\n"

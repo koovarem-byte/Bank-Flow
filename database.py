@@ -1318,3 +1318,55 @@ def get_link_issued_at(telegram_id, offer_id):
     conn.close()
 
     return result[0] if result else None
+
+
+def get_user_applications_detailed(telegram_id):
+    conn = connect()
+    cursor = conn.cursor()
+
+    cursor.execute("""
+        SELECT
+            id,
+            offer_id,
+            offer_name,
+            reward,
+            status,
+            admin_comment,
+            created_at,
+            reviewed_at
+        FROM applications
+        WHERE telegram_id = %s
+        ORDER BY id DESC
+    """, (telegram_id,))
+
+    result = cursor.fetchall()
+
+    cursor.close()
+    conn.close()
+
+    return result
+
+
+def get_user_link_requests(telegram_id):
+    """Последний запрос ссылки по каждому офферу."""
+    conn = connect()
+    cursor = conn.cursor()
+
+    cursor.execute("""
+        SELECT DISTINCT ON (offer_id)
+            offer_id,
+            status,
+            personal_link,
+            admin_comment,
+            issued_at
+        FROM link_requests
+        WHERE telegram_id = %s
+        ORDER BY offer_id, id DESC
+    """, (telegram_id,))
+
+    result = cursor.fetchall()
+
+    cursor.close()
+    conn.close()
+
+    return result
