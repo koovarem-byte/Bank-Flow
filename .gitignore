@@ -19,3 +19,6 @@ __pycache__/
 # Архивы для переноса
 *.zip
 *.bundle
+
+# Клон GitHub-репозитория (отдельный git)
+bank-flow/
