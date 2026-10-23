@@ -30,6 +30,7 @@
 - `config.py` — переменные окружения (`BOT_TOKEN`, `DATABASE_URL`, `ADMIN_ID`, `SUPPORT_USERNAME`, `PORT`), понятная ошибка при отсутствии. Шаблон — `.env.example`.
 - `loader.py` — объект `bot`. `states.py` — все FSM-состояния.
 - `privacy.py` — политика конфиденциальности и текст согласия (`PRIVACY_VERSION`: при смене текста пользователи подтверждают заново). `middlewares.py` — `OnboardingMiddleware`: пока нет 18+ и согласия на ПД, пускает только `/start`, `/privacy` и кнопки входа (админ проходит всегда).
+- `webapp/` — Mini App: `auth.py` (проверка initData), `api.py` (JSON API `/api/*`, страница `/app/`), `static/` (index.html, app.js, style.css без сборки). Работает на том же aiohttp-сервере, что и health. `notifications.py` — уведомления админу из Mini App (те же кнопки, ввод экранируется). `progress.py` — уровни и достижения для Mini App (в handlers те же значения пока продублированы). `WEBAPP_URL` в env — кнопка «Открыть приложение» в меню бота.
 - `handlers/` — роутеры aiogram, порядок подключения в `handlers/__init__.py` важен (обработчики сообщений без фильтра состояния срабатывают в любом состоянии): `onboarding` (18+, согласие, `/privacy`) → `menu` (старт, главное меню) → `admin` (админка, заявки, комментарии, `/broadcast100`) → `academy` → `business` (самозанятость/ИП/РКО, вопросы админу, звонок ВТБ) → `catalog` (категории, карточка оффера, персональные ссылки, «Выполнил») → `cabinet` (кабинет, продукты, рефералы, достижения, задания, заявки) → `legacy` (старая reply-клавиатура, кандидаты на удаление) → `withdrawals` (вывод, выплаты).
 - `database.py` — все запросы к Postgres, `create_tables()`.
 - `offers.py` — `MAGNIT_LINK`, словарь `OFFERS` (name, category, type, reward, min_age, max_age, access: `direct`/`personal`/`manual`, link, condition, requirements) и `CATEGORIES`.
@@ -60,6 +61,8 @@
 - Кнопки без обработчика (не работали и раньше): `add_product` («➕ Добавить продукт» в «Мои продукты»), `debit_cards`, `magnit_done`.
 - `handlers/business.py` (`receive_business_question`): клавиатура для админа (`admin_keyboard`) собирается, но не отправляется — у вопроса из бизнес-раздела, вероятно, нет кнопки «Ответить».
 - Академия: `academy_1`–`academy_4` не проверяют доступ (открыть можно любым callback), проверка есть только в `academy`.
+- В боте ввод пользователя (ФИО, email, вопрос в бизнес-раздел) вставляется в HTML-сообщения админу без экранирования: символы `<`/`&` в тексте сломают отправку уведомления. В Mini App экранируется (`notifications.py`); в боте — исправить.
+- Логика заявок/ссылок/выплат продублирована: бот (handlers) и Mini App (webapp/api.py + notifications.py). Свести в общий сервисный слой отдельной задачей.
 - Статус заявки берётся по индексу (`application[7]`, `withdrawal[5]`) из `SELECT *` — зависит от порядка колонок в боевой базе; при правках (P2.13) перейти на явный список колонок.
 
 ### P2 — учёт лидов (важно для денег)

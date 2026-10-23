@@ -362,7 +362,7 @@ async def create_withdrawal_request(request):
     available = get_available_balance(user["id"])
 
     if amount > available:
-        return error(400, "not_enough", f"Доступно для вывода: {available:,} ₽")
+        return error(400, "not_enough", f"Доступно для вывода: {available:,} ₽".replace(",", " "))
 
     if not 10 <= len(digits(phone)) <= 15 or len(phone) > 30:
         return error(400, "bad_phone", "Проверьте номер телефона")
@@ -415,6 +415,10 @@ async def achievements(request):
     })
 
 
+async def app_redirect(request):
+    raise web.HTTPFound("/app/")
+
+
 async def index(request):
     return web.FileResponse(os.path.join(STATIC_DIR, "index.html"))
 
@@ -435,6 +439,6 @@ def setup_webapp(app):
     app.router.add_get("/api/referrals", referrals)
     app.router.add_get("/api/achievements", achievements)
 
-    app.router.add_get("/app", index)
+    app.router.add_get("/app", app_redirect)
     app.router.add_get("/app/", index)
     app.router.add_static("/app/static", STATIC_DIR)

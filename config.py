@@ -33,3 +33,6 @@ SUPPORT_USERNAME = _require("SUPPORT_USERNAME").lstrip("@")
 SUPPORT_URL = f"https://t.me/{SUPPORT_USERNAME}"
 
 PORT = int(os.getenv("PORT", "10000"))
+
+# HTTPS-адрес Mini App (…/app/). Пусто — кнопки приложения в боте нет.
+WEBAPP_URL = os.getenv("WEBAPP_URL", "").strip()

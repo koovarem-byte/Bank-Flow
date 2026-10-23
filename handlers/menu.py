@@ -7,9 +7,10 @@ from aiogram.types import (
     CallbackQuery,
     InlineKeyboardMarkup,
     InlineKeyboardButton,
-    ReplyKeyboardRemove
+    ReplyKeyboardRemove,
+    WebAppInfo
 )
-from config import ADMIN_ID, SUPPORT_URL
+from config import ADMIN_ID, SUPPORT_URL, WEBAPP_URL
 from database import (
     add_user,
     get_balance,
@@ -24,6 +25,19 @@ from loader import bot
 
 
 router = Router()
+
+
+def with_webapp(keyboard):
+    """Кнопка Mini App первой строкой, если задан WEBAPP_URL."""
+    if WEBAPP_URL:
+        keyboard.inline_keyboard.insert(0, [
+            InlineKeyboardButton(
+                text="📱 Открыть приложение",
+                web_app=WebAppInfo(url=WEBAPP_URL)
+            )
+        ])
+
+    return keyboard
 
 
 @router.message(CommandStart())
@@ -123,7 +137,7 @@ async def start(message: Message):
         "</blockquote>\n\n"
 
         "<b>Выберите действие</b>",
-        reply_markup=keyboard,
+        reply_markup=with_webapp(keyboard),
         parse_mode="HTML"
     )
 
@@ -379,7 +393,7 @@ async def home(callback: CallbackQuery):
         "вознаграждения и прокачивай свой уровень."
         "</blockquote>",
 
-        reply_markup=keyboard,
+        reply_markup=with_webapp(keyboard),
         parse_mode="HTML"
     )
 
